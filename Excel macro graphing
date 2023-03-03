@@ -1,0 +1,513 @@
+Sub CreateGraphs()
+
+Dim endTime As Double
+Dim milS As Double
+Dim hours As String
+Dim minutes As String
+Dim seconds As String
+Dim AM_or_PM As String
+Dim TMPms As String 'milS typecasted into a string, ready for 0 removal
+Dim miliseconds As String 'milS without 0
+Dim wbFilename As String
+Dim wb As Workbook
+Dim ws As Worksheet
+
+endTime = Timer
+hours = Format(endTime / 86400, "hh")
+minutes = Format(endTime / 86400, "nn")
+seconds = Format(endTime / 86400, "ss")
+AM_or_PM = Format(endTime / 86400, "am/pm")
+milS = (endTime) - (1 * Fix(endTime / 1))
+TMPms = CStr(milS)
+miliseconds = Right(TMPms, Len(TMPms) - 1) 'remove the 0 on the milisecond reading
+
+wbFilename = "D:\school work\Vex\Vex V5\Coding\Excel graphing\Flywheel result log" & _
+              Space(1) & Format(Date, "dddd dd-mm-yyyy") & Space(1) & _
+              hours & "-" & minutes & "-" & seconds & miliseconds & ".xlsm"
+
+Workbooks.Add.SaveAs FileName:=wbFilename, FileFormat:=52 'save as .xlsm
+
+Set wb = ActiveWorkbook
+
+Set ws = wb.Sheets("Sheet1")
+Application.Cursor = xlWait
+
+
+ws.Cells(1, 1).Select
+
+With ws.QueryTables.Add(Connection:="Text;" & "D:\school work\Vex\Vex V5\Coding\Excel graphing\sample.csv", Destination:=ws.Range("A1"))
+       .TextFileParseType = xlDelimited
+       .TextFileCommaDelimiter = True ' this is true as it is comma separated
+       .Refresh
+End With
+
+Dim i As Integer 'Number of rows of data
+Dim j As Integer 'column counter
+Dim maxj As Integer 'Number of columns of data
+Dim Fname As String
+
+maxj = ws.Cells(1, Columns.Count).End(xlToLeft).Column
+i = ws.Cells(Rows.Count, 1).End(xlUp).Row
+
+'Creating a motor rpm chart
+ws.Cells(1, (maxj + 2)).Select
+With Charts.Add2
+    .ChartType = xlLine
+    For j = 4 To 7
+        .SeriesCollection.NewSeries
+        With .SeriesCollection((j - 3))
+             .Name = "=" & ws.Name & "!" & _
+              ws.Cells(1, j).Address
+             .XValues = "=" & ws.Name & "!" & _
+              ws.Range(ws.Cells(2, 3), ws.Cells(i, 3)).Address 'Time elapsed/seconds
+             .Values = "=" & ws.Name & "!" & _
+              ws.Range(ws.Cells(2, j), ws.Cells(i, j)).Address
+             If j < 6 Then
+                .Trendlines.Add Type:=xlMovingAvg, Period:=5
+             End If
+        End With
+    Next j
+
+    With .Axes(xlCategory, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 3).Text 'Time elapsed/seconds
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    With .Axes(xlValue, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = "Current motor RPM/RPM"
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    .HasLegend = True
+    .Legend.Position = xlLegendPositionBottom
+    .HasTitle = True
+    With .ChartTitle
+         .Text = wb.Name & " motor RPMs (line graph)"
+         .Font.Underline = xlUnderlineStyleSingle
+    End With
+    .Name = "Motor RPMs"
+End With
+ws.Activate
+wb.Save
+
+'Creating a Motor1 commanded voltage chart
+ws.Cells(1, (maxj + 2)).Select
+With Charts.Add2
+    For j = 8 To 11
+        .SeriesCollection.NewSeries
+        With .SeriesCollection((j - 7))
+             .Name = "=" & ws.Name & "!" & _
+              ws.Cells(1, j).Address
+             .XValues = "=" & ws.Name & "!" & _
+              ws.Range(ws.Cells(2, 3), ws.Cells(i, 3)).Address 'Time elapsed/seconds
+             .Values = "=" & ws.Name & "!" & _
+              ws.Range(ws.Cells(2, j), ws.Cells(i, j)).Address
+             If j = 11 Then
+                .ChartType = xlLine
+             Else
+                .ChartType = xlAreaStacked
+             End If
+        End With
+    Next j
+    
+    With .Axes(xlCategory, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 3).Text 'Time elapsed/seconds
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    With .Axes(xlValue, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 11).Text
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    .HasLegend = True
+    .Legend.Position = xlLegendPositionBottom
+    .HasTitle = True
+    With .ChartTitle
+         .Text = wb.Name & " Motor1 Gain influences (stacked area graph)"
+         .Font.Underline = xlUnderlineStyleSingle
+    End With
+    .Name = "Motor1 Gain influences"
+End With
+ws.Activate
+wb.Save
+
+'Creating a Motor2 commanded voltage chart
+
+ws.Cells(1, (maxj + 2)).Select
+With Charts.Add2
+    For j = 13 To 16
+        .SeriesCollection.NewSeries
+        With .SeriesCollection((j - 12))
+             .Name = "=" & ws.Name & "!" & _
+              ws.Cells(1, j).Address
+             .XValues = "=" & ws.Name & "!" & _
+              ws.Range(ws.Cells(2, 3), ws.Cells(i, 3)).Address 'Time elapsed/seconds
+             .Values = "=" & ws.Name & "!" & _
+              ws.Range(ws.Cells(2, j), ws.Cells(i, j)).Address
+             If j = 16 Then
+                .ChartType = xlLine
+             Else
+                .ChartType = xlAreaStacked
+             End If
+        End With
+    Next j
+    
+    With .Axes(xlCategory, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 3).Text 'Time elapsed/seconds
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    With .Axes(xlValue, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 16).Text
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    .HasLegend = True
+    .Legend.Position = xlLegendPositionBottom
+    .HasTitle = True
+    With .ChartTitle
+         .Text = wb.Name & " Motor2 Gain influences (stacked area graph)"
+         .Font.Underline = xlUnderlineStyleSingle
+    End With
+    .Name = "Motor2 Gain influences"
+End With
+ws.Activate
+wb.Save
+
+'Creating a delta time chart
+ws.Cells(1, (maxj + 2)).Select
+With Charts.Add2
+     .ChartType = xlLine
+     .SeriesCollection.NewSeries
+     With .SeriesCollection(1)
+          .Name = "=" & ws.Name & "!" & _
+           ws.Cells(1, 2).Address
+          .XValues = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 1), ws.Cells(i, 1)).Address 'Script counter
+          .Values = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 2), ws.Cells(i, 2)).Address
+' manually change line join to miter and line cap to square
+     End With
+     
+     With .Axes(xlCategory, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 1).Text 'Script counter
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    With .Axes(xlValue, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 2).Text
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    .HasLegend = True
+    .Legend.Position = xlLegendPositionBottom
+    .HasTitle = True
+    With .ChartTitle
+         .Text = wb.Name & " Delta time variances (line chart)"
+         .Font.Underline = xlUnderlineStyleSingle
+    End With
+    .Name = "Delta time variances"
+End With
+ws.Activate
+wb.Save
+     
+' Creating a derivative chart
+ws.Cells(1, (maxj + 2)).Select
+With Charts.Add2
+     .ChartType = xlLine
+     .SeriesCollection.NewSeries
+     With .SeriesCollection(1)
+          .Name = "=" & ws.Name & "!" & _
+           ws.Cells(1, 10).Address
+          .XValues = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 3), ws.Cells(i, 3)).Address 'Time elapsed/seconds
+          .Values = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 10), ws.Cells(i, 10)).Address
+     End With
+     .SeriesCollection.NewSeries
+     With .SeriesCollection(2)
+          .Name = "=" & ws.Name & "!" & _
+           ws.Cells(1, 15).Address
+          .XValues = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 3), ws.Cells(i, 3)).Address 'Time elapsed/seconds
+          .Values = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 15), ws.Cells(i, 15)).Address
+     End With
+
+     With .Axes(xlCategory, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 3).Text 'Time elapsed/seconds
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    With .Axes(xlValue, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = "Voltage Commanded/volts"
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    .HasLegend = True
+    .Legend.Position = xlLegendPositionBottom
+    .HasTitle = True
+    With .ChartTitle
+         .Text = wb.Name & " Derivative gains (line chart)"
+         .Font.Underline = xlUnderlineStyleSingle
+    End With
+    .Name = "Derivative gains"
+End With
+ws.Activate
+wb.Save
+
+'Creating motor1 integral gain chart
+ws.Cells(1, (maxj + 2)).Select
+With Charts.Add2
+     .SeriesCollection.NewSeries
+     With .SeriesCollection(1)
+          .Name = "=" & ws.Name & "!" & _
+           ws.Cells(1, 9).Address
+          .XValues = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 3), ws.Cells(i, 3)).Address 'Time elapsed/seconds
+          .Values = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 9), ws.Cells(i, 9)).Address
+          .ChartType = xlArea
+     End With
+     .SeriesCollection.NewSeries
+     With .SeriesCollection(2)
+          .Name = "=" & ws.Name & "!" & _
+           ws.Cells(1, 12).Address
+          .XValues = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 3), ws.Cells(i, 3)).Address 'Time elapsed/seconds
+          .Values = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 12), ws.Cells(i, 12)).Address
+          .ChartType = xlLine
+     End With
+     
+     With .Axes(xlCategory, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 3).Text 'Time elapsed/seconds
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    With .Axes(xlValue, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = "Voltage Commanded/volts"
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    .HasLegend = True
+    .Legend.Position = xlLegendPositionBottom
+    .HasTitle = True
+    With .ChartTitle
+         .Text = wb.Name & Space(1) & ws.Cells(1, 9).Text & " (line chart)"
+         .Font.Underline = xlUnderlineStyleSingle
+    End With
+    .Name = ws.Cells(1, 9).Text 'Motor1 integral gain
+End With
+ws.Activate
+wb.Save
+
+'Creating motor2 integral gain chart
+ws.Cells(1, (maxj + 2)).Select
+With Charts.Add2
+     .SeriesCollection.NewSeries
+     With .SeriesCollection(1)
+          .Name = "=" & ws.Name & "!" & _
+           ws.Cells(1, 14).Address
+          .XValues = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 3), ws.Cells(i, 3)).Address 'Time elapsed/seconds
+          .Values = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 14), ws.Cells(i, 14)).Address
+          .ChartType = xlArea
+     End With
+     .SeriesCollection.NewSeries
+     With .SeriesCollection(2)
+          .Name = "=" & ws.Name & "!" & _
+           ws.Cells(1, 17).Address
+          .XValues = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 3), ws.Cells(i, 3)).Address 'Time elapsed/seconds
+          .Values = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 17), ws.Cells(i, 17)).Address
+          .ChartType = xlLine
+     End With
+
+     With .Axes(xlCategory, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 3).Text 'Time elapsed/seconds
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    With .Axes(xlValue, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = "Voltage Commanded/volts"
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    .HasLegend = True
+    .Legend.Position = xlLegendPositionBottom
+    .HasTitle = True
+    With .ChartTitle
+         .Text = wb.Name & Space(1) & ws.Cells(1, 14).Text & " (line chart)"
+         .Font.Underline = xlUnderlineStyleSingle
+    End With
+    .Name = ws.Cells(1, 14).Text 'Motor2 integral gain
+End With
+ws.Activate
+wb.Save
+
+'Creating Motor 1 voltage-RPM graph
+ws.Cells(1, (maxj + 2)).Select
+With Charts.Add2
+     .ChartType = xlXYScatter
+     .SeriesCollection.NewSeries
+     With .SeriesCollection(1)
+          .Name = "=" & ws.Name & "!" & _
+           ws.Cells(1, 4).Address
+          .XValues = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 19), ws.Cells(i, 19)).Address 'Motor 1 Voltage
+          .Values = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 4), ws.Cells(i, 4)).Address
+          .Trendlines.Add Type:=xlLinear
+     End With
+
+     With .Axes(xlCategory, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 19).Text 'Motor1 voltage/volts
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    With .Axes(xlValue, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = "Motor1 RPM/RPM"
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    .HasLegend = True
+    .Legend.Position = xlLegendPositionBottom
+    .HasTitle = True
+    With .ChartTitle
+         .Text = wb.Name & Space(1) & "motor1 voltage - RPM relationship" & " (line chart)"
+         .Font.Underline = xlUnderlineStyleSingle
+    End With
+    .Name = "Motor1 Voltage - RPM graph"
+End With
+ws.Activate
+wb.Save
+
+'Creating Motor 2 voltage-RPM graph
+ws.Cells(1, (maxj + 2)).Select
+With Charts.Add2
+     .ChartType = xlXYScatter
+     .SeriesCollection.NewSeries
+     With .SeriesCollection(1)
+          .Name = "=" & ws.Name & "!" & _
+           ws.Cells(1, 5).Address
+          .XValues = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 23), ws.Cells(i, 23)).Address 'Motor 1 Voltage
+          .Values = "=" & ws.Name & "!" & _
+           ws.Range(ws.Cells(2, 5), ws.Cells(i, 5)).Address
+          .Trendlines.Add Type:=xlLinear
+     End With
+
+     With .Axes(xlCategory, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = ws.Cells(1, 23).Text 'Motor2 voltage/volts
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    With .Axes(xlValue, xlPrimary)
+         .HasTitle = True
+         With .AxisTitle
+              .Text = "Motor2 RPM/RPM"
+              .Font.Underline = xlUnderlineStyleSingle
+         End With
+    End With
+    .HasLegend = True
+    .Legend.Position = xlLegendPositionBottom
+    .HasTitle = True
+    With .ChartTitle
+         .Text = wb.Name & Space(1) & "motor2 voltage - RPM relationship" & " (line chart)"
+         .Font.Underline = xlUnderlineStyleSingle
+    End With
+    .Name = "Motor2 Voltage - RPM graph"
+End With
+ws.Activate
+wb.Save
+
+For j = 18 To 29
+    ws.Cells(1, (maxj + 2)).Select
+    With Charts.Add2
+         .ChartType = xlLine
+         .SeriesCollection.NewSeries
+         With .SeriesCollection(1)
+              .Name = "=" & ws.Name & "!" & _
+               ws.Cells(1, j).Address
+              .XValues = "=" & ws.Name & "!" & _
+               ws.Range(ws.Cells(2, 23), ws.Cells(i, 23)).Address 'Motor 1 Voltage
+              .Values = "=" & ws.Name & "!" & _
+               ws.Range(ws.Cells(2, j), ws.Cells(i, j)).Address
+         End With
+    
+         With .Axes(xlCategory, xlPrimary)
+             .HasTitle = True
+             With .AxisTitle
+                  .Text = ws.Cells(1, 3).Text 'Time elapsed/seconds
+                  .Font.Underline = xlUnderlineStyleSingle
+             End With
+        End With
+        With .Axes(xlValue, xlPrimary)
+             .HasTitle = True
+             With .AxisTitle
+                  .Text = ws.Cells(1, j).Text
+                  .Font.Underline = xlUnderlineStyleSingle
+             End With
+        End With
+        .HasLegend = True
+        .Legend.Position = xlLegendPositionBottom
+        .HasTitle = True
+        With .ChartTitle
+             .Text = wb.Name & Space(1) & _
+                     LCase(Left((ws.Cells(1, j).Value), InStr((ws.Cells(1, j).Value), "/") - 1)) & _
+                     " - time relationship" & " (line chart)" 'removes the characters after the slash in the cell
+             .Font.Underline = xlUnderlineStyleSingle         'and underlines and makes them lowercase
+        End With
+        .Name = Left((ws.Cells(1, j).Value), InStr((ws.Cells(1, j).Value), "/") - 1) & _
+                " - time graph"      'removes the characters after the slash in the cell
+    End With
+    ws.Activate
+    wb.Save
+Next j
+
+ws.Name = "Raw Data"
+wb.Activate
+ws.Activate
+wb.Sheets(ws.Name).Move before:=wb.Sheets(1)
+Application.Cursor = xlDefault
+ws.Cells(1, 1).Select
+wb.Save
+End Sub
