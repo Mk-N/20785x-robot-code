@@ -91,16 +91,15 @@ void get_motor_velocity(double d_Motor1_Velocity, double d_Motor2_Velocity)
 
 void process_speed()
 {
-  get_motor_velocity(FM1_8.velocity(rpm), FM2_9.velocity(rpm));
   Motor1_Integral   = Motor1_Integral + Motor1_Error*delta_time;
   Motor2_Integral   = Motor2_Integral + Motor2_Error*delta_time;
   Motor1_Derivative = (Motor1_Velocity - Previous_Motor1_Velocity)/delta_time;
   Motor2_Derivative = (Motor2_Velocity - Previous_Motor2_Velocity)/delta_time;    
-  if ((Motor1_Error = 0) || (fabs(Motor1_Error) > Motor1_Integral_Limit))
+  if ((Motor1_Error == 0) || (fabs(Motor1_Error) > Motor1_Integral_Limit))
   {
     Motor1_Integral = 0;
   }   
-  if ((Motor2_Error = 0) || (fabs(Motor2_Error) > Motor2_Integral_Limit))
+  if ((Motor2_Error == 0) || (fabs(Motor2_Error) > Motor2_Integral_Limit))
   {
     Motor2_Integral = 0;
   } 
@@ -150,8 +149,9 @@ void calculate_previous_velocity()
 
 void flywheel_pid()
 {
-  process_speed();
+  get_motor_velocity(FM1_8.velocity(rpm), FM2_9.velocity(rpm));
   set_motor_error();
+  process_speed();
   set_motor_volt();
   calculate_previous_velocity();
 }
