@@ -8,7 +8,7 @@ using code = vision::code;
 brain  Brain;
 
 // VEXcode device constructors
-motor Flywheel_MotorP8N = motor(PORT8, ratio6_1, false);
+motor Flywheel_MotorP6N = motor(PORT8, ratio6_1, false);
 controller Controller1 = controller(primary);
 
 // VEXcode generated functions

@@ -3,7 +3,7 @@ using namespace vex;
 extern brain Brain;
 
 // VEXcode devices
-extern motor Flywheel_MotorP8N;
+extern motor Flywheel_MotorP6N;
 extern controller Controller1;
 
 /**
