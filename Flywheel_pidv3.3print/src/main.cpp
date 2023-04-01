@@ -3,7 +3,7 @@
 /*    Module:       main.cpp                                                  */
 /*    Author:       Mukunth Natarajan @20875X                                 */
 /*    Created:      Fri Feb 24 2023                                           */
-/*    Description:  Flywheel motor port and name has been changed (now P6)    */
+/*    Description:  Performance boost: Shorter time to calculate integral     */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
@@ -51,9 +51,9 @@ double delta_time                                  = 0;
 ostringstream File_text;
 queue <string> qLog;
 
-void set_values(float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
-                int i_FM_Integral_Limit, float f_FM_Coff_Frequency, 
-                float f_FM_derCoff_Frequency, float f_FM_Kf)
+void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
+                 int i_FM_Integral_Limit, float f_FM_Coff_Frequency, 
+                 float f_FM_derCoff_Frequency, float f_FM_Kf)
 {
                 Flywheel_Motor_Integral_Limit         = i_FM_Integral_Limit;
                 Target_Flywheel_Motor_RPM             = f_TFM_RPM/6;                
@@ -62,11 +62,11 @@ void set_values(float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
                 Flywheel_Motor_Kd                     = f_FM_Kd;                
                 Flywheel_Motor_Feedforwarded_Velocity = Target_Flywheel_Motor_RPM * f_FM_Kf;
 
-                if(f_FM_Coff_Frequency > 1)
+                if (f_FM_Coff_Frequency > 1)
                 {
                   Flywheel_Motor_Cutoff_Frequency = 1;
                 }
-                else if(f_FM_Coff_Frequency < 0)
+                else if (f_FM_Coff_Frequency < 0)
                 {
                   Flywheel_Motor_Cutoff_Frequency = 0;
                 }
@@ -75,11 +75,11 @@ void set_values(float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
                   Flywheel_Motor_Cutoff_Frequency = f_FM_Coff_Frequency;
                 }
 
-                if(f_FM_derCoff_Frequency > 1)
+                if (f_FM_derCoff_Frequency > 1)
                 {
                   Flywheel_Motor_Derivative_Cutoff_Frequency = 1;
                 }
-                else if(f_FM_derCoff_Frequency < 0)
+                else if (f_FM_derCoff_Frequency < 0)
                 {
                   Flywheel_Motor_Derivative_Cutoff_Frequency = 0;
                 }
@@ -89,7 +89,7 @@ void set_values(float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
                 }
 }
 
-void get_and_filter_motor_velocity(double d_Flywheel_Motor_Velocity)
+void get_and_filter_motor_velocity (double d_Flywheel_Motor_Velocity)
 {
   Flywheel_Motor_Filtered_Velocity = Flywheel_Motor_Cutoff_Frequency * d_Flywheel_Motor_Velocity 
                                      + (1 - Flywheel_Motor_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Velocity;
@@ -102,37 +102,40 @@ void set_motor_error()
 
 void process_speed()
 {
-  Flywheel_Motor_Integral = Flywheel_Motor_Integral + Flywheel_Motor_Error * delta_time;
-  Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Derivative_Cutoff_Frequency 
-                                       * ((Flywheel_Motor_Filtered_Velocity - Previous_Flywheel_Motor_Filtered_Velocity)/delta_time)
-                                       + (1 - Flywheel_Motor_Derivative_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Derivative;
-  if(Flywheel_Motor_Error == 0)
+  if (Flywheel_Motor_Error == 0)
   {
     Flywheel_Motor_Integral = 0;
   }   
-  if(fabs(Flywheel_Motor_Error) > Flywheel_Motor_Integral_Limit)
+  else if (fabs(Flywheel_Motor_Error) > Flywheel_Motor_Integral_Limit)
   {
     Flywheel_Motor_Integral = 0;
   }
-
-  if((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0))
+  else if ((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0))
   {
     Flywheel_Motor_Integral = 0;
   }
-  if((Target_Flywheel_Motor_RPM < 0) && (Previous_Flywheel_Motor_error < 0) && (Flywheel_Motor_Error > 0))
+  else if ((Target_Flywheel_Motor_RPM < 0) && (Previous_Flywheel_Motor_error < 0) && (Flywheel_Motor_Error > 0))
   {
     Flywheel_Motor_Integral = 0;
   }
+  else 
+  {
+  Flywheel_Motor_Integral = Flywheel_Motor_Integral + Flywheel_Motor_Error * delta_time;
+  }
+  
+  Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Derivative_Cutoff_Frequency 
+                                       * ((Flywheel_Motor_Filtered_Velocity - Previous_Flywheel_Motor_Filtered_Velocity)/delta_time)
+                                       + (1 - Flywheel_Motor_Derivative_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Derivative;
 }
 
 void set_motor_volt()
 {
-  if(Target_Flywheel_Motor_RPM > 0)
+  if (Target_Flywheel_Motor_RPM > 0)
   {
     Flywheel_MotorP6N_sentVoltage = (Flywheel_Motor_Feedforwarded_Velocity + Flywheel_Motor_Kp * Flywheel_Motor_Error + Flywheel_Motor_Ki * Flywheel_Motor_Integral - Flywheel_Motor_Kd * Flywheel_Motor_Filtered_Derivative);
     Flywheel_MotorP6N.spin(directionType::fwd, Flywheel_MotorP6N_sentVoltage, volt);
   }
-  else if(Target_Flywheel_Motor_RPM == 0) 
+  else if (Target_Flywheel_Motor_RPM == 0) 
   {
     Flywheel_MotorP6N.setStopping(hold);
     Flywheel_MotorP6N.stop();
@@ -141,7 +144,7 @@ void set_motor_volt()
   else 
   {
     Flywheel_MotorP6N_sentVoltage = (Flywheel_Motor_Feedforwarded_Velocity + Flywheel_Motor_Kp * Flywheel_Motor_Error + Flywheel_Motor_Ki * Flywheel_Motor_Integral - Flywheel_Motor_Kd * Flywheel_Motor_Filtered_Derivative);
-    Flywheel_MotorP6N.spin(directionType::rev, Flywheel_MotorP6N_sentVoltage, volt);
+    Flywheel_MotorP6N.spin(directionType::fwd, Flywheel_MotorP6N_sentVoltage, volt);
   }
 }
 
@@ -168,14 +171,14 @@ void set_button_pressed_true()
 
 void write_file_from_queue(queue<string> q)
 {
-  if(!Brain.SDcard.isInserted())
+  if (!Brain.SDcard.isInserted())
   {
     cout << "Please insert the sdcard. Try again." << endl;
     Brain.Screen.print("Please insert the sdcard. Try again.");
     return;
   }
   ofstream file_handler("result_log.csv", ofstream::out);
-  while(!q.empty())
+  while (!q.empty())
   {
     file_handler << q.front() << endl;
     q.pop();
@@ -224,7 +227,7 @@ int main()
   qLog.push(File_text.str());
   delta_time = Brain.timer(sec);
 
-  while(!Button_Pressed)
+  while (!Button_Pressed)
   {
     delta_time = Brain.timer(sec) - start_time;
     start_time = Brain.timer(sec);
