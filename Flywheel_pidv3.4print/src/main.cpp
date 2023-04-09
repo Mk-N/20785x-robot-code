@@ -3,7 +3,7 @@
 /*    Module:       main.cpp                                                  */
 /*    Author:       Mukunth Natarajan @20875X                                 */
 /*    Created:      Fri Feb 24 2023                                           */
-/*    Description:  Performance boost: Shorter time to calculate integral     */
+/*    Description:  Performance boost: Even shorter time to calculate integral*/
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
 
@@ -89,40 +89,29 @@ void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
                 }
 }
 
-void get_and_filter_motor_velocity (double d_Flywheel_Motor_Velocity)
+inline void get_and_filter_motor_velocity (double d_Flywheel_Motor_Velocity)
 {
   Flywheel_Motor_Filtered_Velocity = Flywheel_Motor_Cutoff_Frequency * d_Flywheel_Motor_Velocity 
                                      + (1 - Flywheel_Motor_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Velocity;
 }
 
-void set_motor_error()
+inline void set_motor_error()
 {
   Flywheel_Motor_Error = Target_Flywheel_Motor_RPM - Flywheel_Motor_Filtered_Velocity;
 }
 
 void process_speed()
 {
-  if (Flywheel_Motor_Error == 0)
+  if ((Flywheel_Motor_Error == 0) || (fabs(Flywheel_Motor_Error) > Flywheel_Motor_Integral_Limit) ||
+     ((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0)) || 
+     ((Target_Flywheel_Motor_RPM < 0) && (Previous_Flywheel_Motor_error < 0) && (Flywheel_Motor_Error > 0)))
   {
     Flywheel_Motor_Integral = 0;
   }   
-  else if (fabs(Flywheel_Motor_Error) > Flywheel_Motor_Integral_Limit)
-  {
-    Flywheel_Motor_Integral = 0;
-  }
-  else if ((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0))
-  {
-    Flywheel_Motor_Integral = 0;
-  }
-  else if ((Target_Flywheel_Motor_RPM < 0) && (Previous_Flywheel_Motor_error < 0) && (Flywheel_Motor_Error > 0))
-  {
-    Flywheel_Motor_Integral = 0;
-  }
   else 
   {
-  Flywheel_Motor_Integral = Flywheel_Motor_Integral + Flywheel_Motor_Error * delta_time;
+    Flywheel_Motor_Integral = Flywheel_Motor_Integral + Flywheel_Motor_Error * delta_time;
   }
-  
   Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Derivative_Cutoff_Frequency 
                                        * ((Flywheel_Motor_Filtered_Velocity - Previous_Flywheel_Motor_Filtered_Velocity)/delta_time)
                                        + (1 - Flywheel_Motor_Derivative_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Derivative;
@@ -148,7 +137,7 @@ void set_motor_volt()
   }
 }
 
-void record_previous_values()
+inline void record_previous_values()
 {
   Previous_Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Filtered_Derivative;
   Previous_Flywheel_Motor_Filtered_Velocity   = Flywheel_Motor_Filtered_Velocity;
@@ -252,5 +241,6 @@ int main()
     Flywheel_MotorP6N.setStopping(coast);
     Flywheel_MotorP6N.stop();
     write_file_from_queue(qLog);
-  }  
+  }
+  return 1;  
 }
