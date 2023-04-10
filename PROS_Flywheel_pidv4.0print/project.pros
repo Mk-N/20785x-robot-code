@@ -1,7 +1,7 @@
 {
   "py/object": "pros.conductor.project.Project",
   "py/state": {
-    "project_name": "PROS_Flywheel_pidv4.0print",
+    "project_name": "PROS_Fwhl_pidv4.0print",
     "target": "v5",
     "templates": {
       "kernel": {
@@ -309,7 +309,8 @@
       }
     },
     "upload_options": {
-      "icon": "X"
+      "icon": "X",
+      "description": "Test flywheel PID code"
     }
   }
 }
