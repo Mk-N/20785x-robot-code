@@ -332,6 +332,6 @@ void opcontrol()
   {
     pros::Task::delay(1000);
   }
-  pros::lcd::print(5, "The programme has finished excecuting");
+  pros::lcd::print(5, "The programme has finished excecuting.");
   return;
 }
