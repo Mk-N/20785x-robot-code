@@ -102,16 +102,11 @@ inline void set_motor_error()
 
 void process_speed()
 {
-  if ((Flywheel_Motor_Error == 0) || (fabs(Flywheel_Motor_Error) > Flywheel_Motor_Integral_Limit) ||
-     ((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0)) || 
-     ((Target_Flywheel_Motor_RPM < 0) && (Previous_Flywheel_Motor_error < 0) && (Flywheel_Motor_Error > 0)))
-  {
-    Flywheel_Motor_Integral = 0;
-  }   
-  else 
-  {
-    Flywheel_Motor_Integral = Flywheel_Motor_Integral + Flywheel_Motor_Error * delta_time;
-  }
+  Flywheel_Motor_Integral = ((Flywheel_Motor_Error == 0) || (fabs(Flywheel_Motor_Error) > Flywheel_Motor_Integral_Limit) ||
+                            ((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0)) || 
+                            ((Target_Flywheel_Motor_RPM < 0) && (Previous_Flywheel_Motor_error < 0) && (Flywheel_Motor_Error > 0))) ? 0
+														: Flywheel_Motor_Integral + Flywheel_Motor_Error * delta_time; 
+	
   Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Derivative_Cutoff_Frequency 
                                        * ((Flywheel_Motor_Filtered_Velocity - Previous_Flywheel_Motor_Filtered_Velocity)/delta_time)
                                        + (1 - Flywheel_Motor_Derivative_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Derivative;
@@ -182,7 +177,6 @@ int main()
   wait(1,sec);
   Controller1.ButtonX.pressed(set_button_pressed_true);
   // Target_Flywheel_Motor_RPM is between 0 and 3600
-  // Keep them equal unless you are doing a double flywheel or require fine control
   set_values(Target_Flywheel_Motor_RPM, Flywheel_Motor_Kp, Flywheel_Motor_Ki, Flywheel_Motor_Kd, Flywheel_Motor_Integral_Limit, 
              Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
   File_text << "Script counter,Delta time/seconds,Time elapsed/seconds,"
@@ -222,7 +216,7 @@ int main()
     start_time = Brain.timer(sec);
     flywheel_pid();
     Script_Counter++;
-    File_text << Script_Counter << File_Seperator << delta_time << File_Seperator << (delta_time * Script_Counter) << File_Seperator
+    File_text << Script_Counter << File_Seperator << delta_time << File_Seperator << start_time << File_Seperator
               << (Flywheel_MotorP6N.velocity(rpm)*6) << File_Seperator 
               << Target_Flywheel_Motor_RPM << File_Seperator << (Flywheel_Motor_Filtered_Velocity*6) << File_Seperator
               << (Flywheel_Motor_Error*Flywheel_Motor_Kp) << File_Seperator << (Flywheel_Motor_Integral*Flywheel_Motor_Ki) << File_Seperator
@@ -235,12 +229,12 @@ int main()
               << Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator;  
     qLog.push(File_text.str());  
   }
-  delta_time = Brain.timer(sec);
+  delta_time = Brain.timer(sec) - start_time;
   if (Button_Pressed)
   {
     Flywheel_MotorP6N.setStopping(coast);
     Flywheel_MotorP6N.stop();
     write_file_from_queue(qLog);
   }
-  return 1;  
+  return 0;  
 }
