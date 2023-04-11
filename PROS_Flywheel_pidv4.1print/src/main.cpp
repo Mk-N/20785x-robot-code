@@ -154,15 +154,28 @@ void write_file_from_queue(std::queue<std::string> q)
 		pros::lcd::print(0, "Please insert the sdcard.");
     pros::lcd::print(1, "Waiting until the SD card is installed...");
     std::cout << "Waiting until the SD card is installed..." << std::endl;
-    while (!pros::usd::is_installed()) 
+    if (!pros::usd::is_installed())
     {
-      pros::delay(100);
+      std::uint32_t now = pros::millis();
+      pros::Task::delay_until(&now,100);
       if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
       {
         std::cout << "The Printing has been cancelled." << std::endl;
         pros::lcd::clear();  
-		    pros::lcd::print(0, "The printing has been cancelled.");
+        pros::lcd::print(0, "The printing has been cancelled.");
         return;
+      }
+      while (!pros::usd::is_installed()) 
+      {
+        now = pros::millis();
+        pros::Task::delay_until(&now,100);
+        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+        {
+          std::cout << "The Printing has been cancelled." << std::endl;
+          pros::lcd::clear();  
+          pros::lcd::print(0, "The printing has been cancelled.");
+          return;
+        }
       }
     }
     pros::lcd::clear();
