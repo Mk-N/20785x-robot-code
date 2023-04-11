@@ -161,7 +161,7 @@ void write_file_from_queue(std::queue<std::string> q)
     }
     pros::lcd::clear();
   }
-  std::cout << "The Printing has commence." << std::endl;
+  std::cout << "The Printing has commenced." << std::endl;
   pros::lcd::clear();  
 	pros::lcd::print(0, "The printing has commenced.");
   std::ofstream file_handler("result_log.csv", std::ofstream::out); // creates a "result_log.csv" file
@@ -326,11 +326,13 @@ void autonomous() {}
  */
 void opcontrol() 
 {
-	pros::Task flywheel_test (main_fcn, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "main_t");
-  pros::delay(1000);
+	std::uint32_t now = pros::millis();
+  pros::Task flywheel_test (main_fcn, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "main_t");
+  pros::Task::delay_until(&now,1000);
   while (!Task_Ended)
   {
-    pros::Task::delay(1000);
+    now = pros::millis();
+    pros::Task::delay_until(&now,1000);
   }
   pros::lcd::print(5, "The programme has finished excecuting.");
   return;

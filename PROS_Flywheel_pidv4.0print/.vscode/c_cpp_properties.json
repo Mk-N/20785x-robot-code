@@ -4,7 +4,8 @@
       "name": "PROS Project",
       "includePath": [
         "${workspaceFolder}/**",
-        "d:\\school work\\Vex\\Vex V5\\20785x-robot-code\\PROS_Flywheel_pidv4.0print\\include"
+        "d:\\school work\\Vex\\Vex V5\\20785x-robot-code\\PROS_Flywheel_pidv4.0print\\include",
+        "d:\\school work\\Vex\\Vex V5\\Coding in PROS\\Flywheel pid PROS\\PROS_Flywheel_pidv4.0print\\include"
       ],
       "defines": [
         "_DEBUG",
