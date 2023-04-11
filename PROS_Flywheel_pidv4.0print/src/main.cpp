@@ -1,4 +1,6 @@
 #include "main.h"
+#include "pros/rotation.h"
+#include "sylib/motor.hpp"
 
 #define Flywheel_Motor_Port 6
 
@@ -172,6 +174,7 @@ int main_fcn()
 {
 	master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X); // Allows for the ability for the flywheel code to be ended
   pros::delay(1000);
+  // Target_Flywheel_Motor_RPM is between 0 and 3600
 	set_values(Target_Flywheel_Motor_RPM, Flywheel_Motor_Kp, Flywheel_Motor_Ki, Flywheel_Motor_Kd, Flywheel_Motor_Integral_Limit, 
              Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
   File_text << "Script counter,Delta time/seconds,Time elapsed/seconds,"
