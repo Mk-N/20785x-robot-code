@@ -280,6 +280,7 @@ int main_fcn()
  */
 void initialize() 
 {
+  pros::delay(500); // Stop the user from doing anything while legacy ports configure.
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Hello PROS User!");
 	pros::lcd::register_btn1_cb(on_center_button);
