@@ -1,6 +1,4 @@
 #include "main.h"
-#include "pros/misc.h"
-
 
 ///// ez::print_to_screen
 // if (master.get_digital(DIGITAL_L1))
