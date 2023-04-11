@@ -1,6 +1,4 @@
 #include "main.h"
-#include "pros/rotation.h"
-#include "sylib/motor.hpp"
 
 #define Flywheel_Motor_Port 6
 
@@ -145,11 +143,27 @@ void write_file_from_queue(std::queue<std::string> q)
 {
   if (!pros::usd::is_installed()) // checks if an sdcard is installed and displays an error message
   {
-    std::cout << "Please insert the sdcard. Try again." << std::endl;
+    std::cout << "Please insert the SD card. Try again." << std::endl;
     pros::lcd::clear();  
-		pros::lcd::print(0, "Please insert the sdcard. Try again.");
-    return;
+		pros::lcd::print(0, "Please insert the sdcard.");
+    pros::lcd::print(1, "Waiting until the SD card is installed...");
+    std::cout << "Waiting until the SD card is installed..." << std::endl;
+    while (!pros::usd::is_installed()) 
+    {
+      pros::delay(100);
+      if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+      {
+        std::cout << "The Printing has been cancelled." << std::endl;
+        pros::lcd::clear();  
+		    pros::lcd::print(0, "The printing has been cancelled.");
+        return;
+      }
+    }
+    pros::lcd::clear();
   }
+  std::cout << "The Printing has commence." << std::endl;
+  pros::lcd::clear();  
+	pros::lcd::print(0, "The printing has commenced.");
   std::ofstream file_handler("result_log.csv", std::ofstream::out); // creates a "result_log.csv" file
   while (!q.empty()) // repeatedly checks if a queue is empty and writes the queue's contents to a sdcard file
   {
@@ -318,5 +332,6 @@ void opcontrol()
   {
     pros::Task::delay(1000);
   }
+  pros::lcd::print(5, "The programme has finished excecuting");
   return;
 }
