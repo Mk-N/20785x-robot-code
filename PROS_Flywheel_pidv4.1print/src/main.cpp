@@ -82,8 +82,8 @@ inline void filter_motor_velocity (double d_Flywheel_Motor_Velocity)
 
 inline double return_and_filter_motor_velocity (double d_Flywheel_Motor_Velocity)
 {
-   return (Flywheel_Motor_Cutoff_Frequency * d_Flywheel_Motor_Velocity  + 
-          (1 - Flywheel_Motor_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Velocity);
+  return (Flywheel_Motor_Cutoff_Frequency * d_Flywheel_Motor_Velocity  + 
+         (1 - Flywheel_Motor_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Velocity);
 }
 
 inline void set_motor_error()
