@@ -19,7 +19,7 @@ void on_center_button()
 	pressed = !pressed;
 	if (pressed)
 	{
-    pros::lcd::set_text(2, "I was pressed!");
+		pros::lcd::set_text(2, "I was pressed!");
   }
 	else
 	{
@@ -60,140 +60,140 @@ std::string out_stream;
 
 
 void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
-                 int i_FM_Integral_Limit, float f_FM_Coff_Frequency, 
-                 float f_FM_derCoff_Frequency, float f_FM_Kf)
+								 int i_FM_Integral_Limit, float f_FM_Coff_Frequency, 
+								 float f_FM_derCoff_Frequency, float f_FM_Kf)
 {
-                Flywheel_Motor_Integral_Limit         = i_FM_Integral_Limit;
-                Target_Flywheel_Motor_RPM             = f_TFM_RPM/6;                
-                Flywheel_Motor_Kp                     = f_FM_Kp;
-                Flywheel_Motor_Ki                     = f_FM_Ki;
-                Flywheel_Motor_Kd                     = f_FM_Kd;                
-                Flywheel_Motor_Feedforwarded_Velocity = Target_Flywheel_Motor_RPM * f_FM_Kf;
+								Flywheel_Motor_Integral_Limit         = i_FM_Integral_Limit;
+								Target_Flywheel_Motor_RPM             = f_TFM_RPM/6;                
+								Flywheel_Motor_Kp                     = f_FM_Kp;
+								Flywheel_Motor_Ki                     = f_FM_Ki;
+								Flywheel_Motor_Kd                     = f_FM_Kd;                
+								Flywheel_Motor_Feedforwarded_Velocity = Target_Flywheel_Motor_RPM * f_FM_Kf;
 
-                Flywheel_Motor_Cutoff_Frequency = std::clamp(f_FM_Coff_Frequency, static_cast<float>(0), static_cast<float>(1));
+								Flywheel_Motor_Cutoff_Frequency = std::clamp(f_FM_Coff_Frequency, static_cast<float>(0), static_cast<float>(1));
 								Flywheel_Motor_Derivative_Cutoff_Frequency = std::clamp(f_FM_derCoff_Frequency, static_cast<float>(0), static_cast<float>(1));
 }
 
 inline void filter_motor_velocity (double d_Flywheel_Motor_Velocity)
 {
   Flywheel_Motor_Filtered_Velocity = Flywheel_Motor_Cutoff_Frequency * d_Flywheel_Motor_Velocity 
-                                     + (1 - Flywheel_Motor_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Velocity;
+																		 + (1 - Flywheel_Motor_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Velocity;
 }
 
 inline double return_and_filter_motor_velocity (double d_Flywheel_Motor_Velocity)
 {
-  return (Flywheel_Motor_Cutoff_Frequency * d_Flywheel_Motor_Velocity  + 
-         (1 - Flywheel_Motor_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Velocity);
+	return (Flywheel_Motor_Cutoff_Frequency * d_Flywheel_Motor_Velocity  + 
+				 (1 - Flywheel_Motor_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Velocity);
 }
 
 inline void set_motor_error()
 {
-  Flywheel_Motor_Error = Target_Flywheel_Motor_RPM - Flywheel_Motor_Filtered_Velocity;
+	Flywheel_Motor_Error = Target_Flywheel_Motor_RPM - Flywheel_Motor_Filtered_Velocity;
 }
 
 void process_speed()
 {
-  Flywheel_Motor_Integral = ((Flywheel_Motor_Error == 0) || (fabs(Flywheel_Motor_Error) > Flywheel_Motor_Integral_Limit) ||
-                            ((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0)) || 
-                            ((Target_Flywheel_Motor_RPM < 0) && (Previous_Flywheel_Motor_error < 0) && (Flywheel_Motor_Error > 0))) ? 0
+	Flywheel_Motor_Integral = ((Flywheel_Motor_Error == 0) || (fabs(Flywheel_Motor_Error) > Flywheel_Motor_Integral_Limit) ||
+														((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0)) || 
+														((Target_Flywheel_Motor_RPM < 0) && (Previous_Flywheel_Motor_error < 0) && (Flywheel_Motor_Error > 0))) ? 0
 														: Flywheel_Motor_Integral + Flywheel_Motor_Error * delta_time; 
 	
   Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Derivative_Cutoff_Frequency 
-                                       * ((Flywheel_Motor_Filtered_Velocity - Previous_Flywheel_Motor_Filtered_Velocity)/delta_time)
-                                       + (1 - Flywheel_Motor_Derivative_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Derivative;
+																			 * ((Flywheel_Motor_Filtered_Velocity - Previous_Flywheel_Motor_Filtered_Velocity)/delta_time)
+																			 + (1 - Flywheel_Motor_Derivative_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Derivative;
 }
 
 void set_motor_volt()
 {
-  if (Target_Flywheel_Motor_RPM > 0)
-  {
-    Flywheel_MotorP6N_sentVoltage = (Flywheel_Motor_Feedforwarded_Velocity + Flywheel_Motor_Kp * Flywheel_Motor_Error + Flywheel_Motor_Ki * Flywheel_Motor_Integral - Flywheel_Motor_Kd * Flywheel_Motor_Filtered_Derivative);
-    Flywheel_Motor.set_voltage(Flywheel_MotorP6N_sentVoltage);
-  }
-  else if (Target_Flywheel_Motor_RPM == 0) 
-  {
-    Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeHold);
-    Flywheel_Motor.stop();
+	if (Target_Flywheel_Motor_RPM > 0)
+	{
+		Flywheel_MotorP6N_sentVoltage = (Flywheel_Motor_Feedforwarded_Velocity + Flywheel_Motor_Kp * Flywheel_Motor_Error + Flywheel_Motor_Ki * Flywheel_Motor_Integral - Flywheel_Motor_Kd * Flywheel_Motor_Filtered_Derivative);
+		Flywheel_Motor.set_voltage(Flywheel_MotorP6N_sentVoltage);
+	}
+	else if (Target_Flywheel_Motor_RPM == 0) 
+	{
+		Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeHold);
+		Flywheel_Motor.stop();
 		while (1)
 		{
 			if (Flywheel_Motor.is_stopped())
 			{
-		  	Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeCoast);
-        // Task_Ended = true; (use case is to continually force the motor to be stopped so this is not needed)
+				Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeCoast);
+				// Task_Ended = true; (use case is to continually force the motor to be stopped so this is not needed)
 				break;
 			}
 			pros::delay(20);
 		}
-  }
-  else 
-  {
-    Flywheel_MotorP6N_sentVoltage = (Flywheel_Motor_Feedforwarded_Velocity + Flywheel_Motor_Kp * Flywheel_Motor_Error + Flywheel_Motor_Ki * Flywheel_Motor_Integral - Flywheel_Motor_Kd * Flywheel_Motor_Filtered_Derivative);
-    Flywheel_Motor.set_voltage(Flywheel_MotorP6N_sentVoltage);
+	}
+	else 
+	{
+		Flywheel_MotorP6N_sentVoltage = (Flywheel_Motor_Feedforwarded_Velocity + Flywheel_Motor_Kp * Flywheel_Motor_Error + Flywheel_Motor_Ki * Flywheel_Motor_Integral - Flywheel_Motor_Kd * Flywheel_Motor_Filtered_Derivative);
+		Flywheel_Motor.set_voltage(Flywheel_MotorP6N_sentVoltage);
   }
 }
 
 inline void record_previous_values()
 {
-  Previous_Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Filtered_Derivative;
-  Previous_Flywheel_Motor_Filtered_Velocity   = Flywheel_Motor_Filtered_Velocity;
-  Previous_Flywheel_Motor_error               = Flywheel_Motor_Error;
+	Previous_Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Filtered_Derivative;
+	Previous_Flywheel_Motor_Filtered_Velocity   = Flywheel_Motor_Filtered_Velocity;
+	Previous_Flywheel_Motor_error               = Flywheel_Motor_Error;
 }
 
 void flywheel_pid()
 {
-  filter_motor_velocity(Flywheel_Motor.get_velocity());
-  set_motor_error();
-  process_speed();
-  set_motor_volt();
-  record_previous_values();
+	filter_motor_velocity(Flywheel_Motor.get_velocity());
+	set_motor_error();
+	process_speed();
+	set_motor_volt();
+	record_previous_values();
 }
 
 void write_file_from_queue(std::queue<std::string> q)
 {
-  if (!pros::usd::is_installed()) // checks if an sdcard is installed and displays an error message
-  {
-    std::cout << "Please insert the SD card. Try again." << std::endl;
-    pros::lcd::clear();  
+	if (!pros::usd::is_installed()) // checks if an sdcard is installed and displays an error message
+	{
+		std::cout << "Please insert the SD card. Try again." << std::endl;
+		pros::lcd::clear();  
 		pros::lcd::print(0, "Please insert the sdcard.");
-    pros::lcd::print(1, "Waiting until the SD card is installed...");
-    std::cout << "Waiting until the SD card is installed..." << std::endl;
-    if (!pros::usd::is_installed())
-    {
-      std::uint32_t now = pros::millis();
-      pros::Task::delay_until(&now,100);
-      if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
-      {
-        std::cout << "The Printing has been cancelled." << std::endl;
-        pros::lcd::clear();  
-        pros::lcd::print(0, "The printing has been cancelled.");
-        return;
-      }
-      while (!pros::usd::is_installed()) 
-      {
-        now = pros::millis();
-        pros::Task::delay_until(&now,100);
-        if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
-        {
-          std::cout << "The Printing has been cancelled." << std::endl;
-          pros::lcd::clear();  
-          pros::lcd::print(0, "The printing has been cancelled.");
-          return;
-        }
-      }
-    }
-    pros::lcd::clear();
-  }
-  std::cout << "The Printing has commenced." << std::endl;
-  pros::lcd::clear();  
+		pros::lcd::print(1, "Waiting until the SD card is installed...");
+		std::cout << "Waiting until the SD card is installed..." << std::endl;
+		if (!pros::usd::is_installed())
+		{
+			std::uint32_t now = pros::millis();
+			pros::Task::delay_until(&now,100);
+			if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+			{
+				std::cout << "The Printing has been cancelled." << std::endl;
+				pros::lcd::clear();  
+				pros::lcd::print(0, "The printing has been cancelled.");
+				return;
+			}
+			while (!pros::usd::is_installed()) 
+			{
+				now = pros::millis();
+				pros::Task::delay_until(&now,100);
+				if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+				{
+					std::cout << "The Printing has been cancelled." << std::endl;
+					pros::lcd::clear();
+					pros::lcd::print(0, "The printing has been cancelled.");
+					return;
+				}
+			}
+		}
+		pros::lcd::clear();
+	}
+	std::cout << "The Printing has commenced." << std::endl;
+	pros::lcd::clear();  
 	pros::lcd::print(0, "The printing has commenced.");
-  std::ofstream file_handler("result_log.csv", std::ofstream::out); // creates a "result_log.csv" file
-  while (!q.empty()) // repeatedly checks if a queue is empty and writes the queue's contents to a sdcard file
-  {
-    file_handler << q.front() << std::endl;
-    q.pop();
-  } 
-  file_handler.close();
-  return;
+	std::ofstream file_handler("result_log.csv", std::ofstream::out); // creates a "result_log.csv" file
+	while (!q.empty()) // repeatedly checks if a queue is empty and writes the queue's contents to a sdcard file
+	{
+		file_handler << q.front() << std::endl;
+		q.pop();
+	} 
+	file_handler.close();
+	return;
 }
 
 inline double compute_delta_time()
@@ -212,30 +212,30 @@ int main_fcn()
   pros::delay(1000);
   // Target_Flywheel_Motor_RPM is between 0 and 3600
 	set_values(Target_Flywheel_Motor_RPM, Flywheel_Motor_Kp, Flywheel_Motor_Ki, Flywheel_Motor_Kd, Flywheel_Motor_Integral_Limit, 
-             Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
+  					 Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
   File_text << "Script counter,Delta time/seconds,Time elapsed/seconds,"
-               "Flywheel motor RPM,Target Flywheel motor RPM,Flywheel motor filtered velocity,"
-               "Flywheel motor proportional gain,Flywheel motor integral gain,Flywheel motor derivative gain,Flywheel motor feedforwarded gain,"
-               "Flywheel motor commanded voltage/volts,Flywheel motor integral limit,"
-               "Flywheel motor current/amperes,Flywheel motor voltage/volts,Flywheel motor power/watts,Flywheel motor torque/newton meters,"
-               "Flywheel motor efficiency/pct,Flywheel motor temperature/celsius,"
-               "Flywheel motor Kp,Flywheel motor Ki,Flywheel motor Kd,Flywheel motor Kf,"
-               "Flywheel motor cutoff frequency,Flywheel motor derivative cutoff frequency"; // writes the collumn titles of the csv file
-  qLog.push(File_text.str());
-  pros::delay(500);
+							 "Flywheel motor RPM,Target Flywheel motor RPM,Flywheel motor filtered velocity,"
+							 "Flywheel motor proportional gain,Flywheel motor integral gain,Flywheel motor derivative gain,Flywheel motor feedforwarded gain,"
+							 "Flywheel motor commanded voltage/volts,Flywheel motor integral limit,"
+							 "Flywheel motor current/amperes,Flywheel motor voltage/volts,Flywheel motor power/watts,Flywheel motor torque/newton meters,"
+							 "Flywheel motor efficiency/pct,Flywheel motor temperature/celsius,"
+							 "Flywheel motor Kp,Flywheel motor Ki,Flywheel motor Kd,Flywheel motor Kf,"
+							 "Flywheel motor cutoff frequency,Flywheel motor derivative cutoff frequency"; // writes the collumn titles of the csv file
+	qLog.push(File_text.str());
+	pros::delay(500);
 	if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
 	{
 		std::cout << "The programme has been cancelled." << std::endl;
-    pros::lcd::clear();  
+		pros::lcd::clear();  
 		pros::lcd::print(0, "The programme has been cancelled.");
-    Task_Ended = true;
-	  return 1;
+		Task_Ended = true;
+		return 1;
 	}
 	else 
 	{
 		// t_Timer.placeHardMark();
-	  // t_Timer.getDtFromHardMark().convert(okapi::millisecond);
-  	start_timer_time = pros::c::micros();
+		// t_Timer.getDtFromHardMark().convert(okapi::millisecond);
+		start_timer_time = pros::c::micros();
 		start_time = pros::c::micros();
 		filter_motor_velocity(Flywheel_Motor.get_velocity());
 		set_motor_error();
@@ -261,11 +261,11 @@ int main_fcn()
 
 	while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
   {
-    delta_time = compute_delta_time();
-    start_time = compute_start_time();
-    flywheel_pid();
-    File_text << ++Script_Counter << File_Seperator << compute_delta_time() << File_Seperator << compute_start_time() << File_Seperator
-              << Flywheel_Motor.get_velocity() << File_Seperator 
+		delta_time = compute_delta_time();
+		start_time = compute_start_time();
+		flywheel_pid();
+		File_text << ++Script_Counter << File_Seperator << compute_delta_time() << File_Seperator << compute_start_time() << File_Seperator
+   							<< Flywheel_Motor.get_velocity() << File_Seperator 
 							<< Target_Flywheel_Motor_RPM << File_Seperator << return_and_filter_motor_velocity(Flywheel_Motor.get_velocity()) << File_Seperator
 							<< (Flywheel_Motor_Error*Flywheel_Motor_Kp) << File_Seperator << (Flywheel_Motor_Integral*Flywheel_Motor_Ki) << File_Seperator
 							<< (-Flywheel_Motor_Filtered_Derivative*Flywheel_Motor_Kd) << File_Seperator << Flywheel_Motor_Feedforwarded_Velocity << File_Seperator
@@ -274,17 +274,17 @@ int main_fcn()
 							<< Flywheel_Motor.get_watts() << File_Seperator << Flywheel_Motor.get_torque() << File_Seperator
 							<< Flywheel_Motor.get_efficiency() << File_Seperator << Flywheel_Motor.get_temperature() << File_Seperator  
 							<< Flywheel_Motor_Kp << File_Seperator << Flywheel_Motor_Ki << File_Seperator << Flywheel_Motor_Kd << Flywheel_Motor_Kf << File_Seperator
-							<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator;  
-    qLog.push(File_text.str());  
-  }					
+							<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator; 					
+		qLog.push(File_text.str());  
+	}					
 	delta_time = compute_delta_time();			 
 	if (Button_Pressed)
-  {
-    Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeCoast);
-    Flywheel_Motor.stop();
-    write_file_from_queue(qLog);
-  }
-  Task_Ended = true;
+	{
+		Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeCoast);
+		Flywheel_Motor.stop();
+		write_file_from_queue(qLog);
+	}
+	Task_Ended = true;
 	return 0;
 }
 
@@ -296,11 +296,11 @@ int main_fcn()
  */
 void initialize() 
 {
-  pros::delay(500); // Stop the user from doing anything while legacy ports configure.
+	pros::delay(500); // Stop the user from doing anything while legacy ports configure.
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Hello PROS User!");
 	pros::lcd::register_btn1_cb(on_center_button);
-  sylib::initialize();
+	sylib::initialize();
 }
 
 /**
@@ -350,13 +350,13 @@ void autonomous() {}
 void opcontrol() 
 {
 	std::uint32_t now = pros::millis();
-  pros::Task flywheel_test (main_fcn, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "main_t");
-  pros::Task::delay_until(&now,1000);
-  while (!Task_Ended)
-  {
-    now = pros::millis();
-    pros::Task::delay_until(&now,1000);
-  }
-  pros::lcd::print(5, "The programme has finished excecuting.");
-  return;
+	pros::Task flywheel_test (main_fcn, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "main_t");
+	pros::Task::delay_until(&now,1000);
+	while (!Task_Ended)
+	{
+		now = pros::millis();
+		pros::Task::delay_until(&now,1000);
+	}
+	pros::lcd::print(5, "The programme has finished excecuting.");
+	return;
 }
