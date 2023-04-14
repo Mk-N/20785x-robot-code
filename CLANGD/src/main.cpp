@@ -42,7 +42,31 @@ Drive chassis (
   ,2.333333
 );
 
-
+/////Functions
+void tripleShot()
+{
+	pros::ADIDigitalOut indexer('C');
+	indexer.set_value(true);
+	pros::delay(80);
+	indexer.set_value(false);
+	pros::delay(100);
+	indexer.set_value(true);
+	pros::delay(80);
+	indexer.set_value(false);
+	pros::delay(150);
+	indexer.set_value(true);
+	pros::delay(80);
+	indexer.set_value(false);
+	pros::delay(100);	
+}
+void singleShot()
+{
+	pros::ADIDigitalOut indexer('C');
+	indexer.set_value(true);
+	pros::delay(80);
+	indexer.set_value(false);
+	pros::delay(100);
+}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -55,12 +79,14 @@ void initialize() {
   ez::print_ez_template();
   
   pros::delay(500); // Stop the user from doing anything while legacy ports configure.
-  ///LEDSTUFF
+  
+	///LEDSTUFF
 	pros::lcd::initialize();
 	pros::lcd::set_text(1, "Hello PROS User!");
 	sylib::initialize();
 	pros::lcd::register_btn1_cb(on_center_button);
-  // Configure your chassis controls
+  
+	// Configure your chassis controls
   chassis.toggle_modify_curve_with_controller(true); // Enables modifying the controller curve with buttons on the joysticks
   chassis.set_active_brake(0); // Sets the active brake kP. We recommend 0.1.
   chassis.set_curve_default(0, 0); // Defaults for curve. If using tank, only the first parameter is used. (Comment this line out if you have an SD card!)  
@@ -150,41 +176,13 @@ void autonomous() {
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-
-
-
- /////CALLBACKS
- void tripleShot()
+void opcontrol() 
 {
-	pros::ADIDigitalOut indexer('C');
-        indexer.set_value(true);
-		pros::delay(80);
-		indexer.set_value(false);
-		pros::delay(100);
-		indexer.set_value(true);
-		pros::delay(80);
-		indexer.set_value(false);
-		pros::delay(150);
-		indexer.set_value(true);
-		pros::delay(80);
-		indexer.set_value(false);
-		pros::delay(100);
-	
-}
-void singleShot()
-{
-	pros::ADIDigitalOut indexer('C');
-	indexer.set_value(true);
-	pros::delay(80);
-	indexer.set_value(false);
-	pros::delay(100);
-}
-
-void opcontrol() {
   // This is preference to what you like to drive on.
   chassis.set_drive_brake(MOTOR_BRAKE_COAST);
-  ///LEDSTUFF
-auto addrled1 = sylib::Addrled(22, 7, -8);
+  
+	///LEDSTUFF
+	auto addrled1 = sylib::Addrled(22, 7, -8);
 	auto addrled2 = sylib::Addrled(22, 8, -8);
 
 	addrled1.set_all(0xFF2E02);
@@ -192,63 +190,79 @@ auto addrled1 = sylib::Addrled(22, 7, -8);
 
 	addrled1.pulse(0x00AF47, 2, 8);
 	addrled2.pulse(0x00AF47, 2, 8);
-	std::uint32_t clock = sylib::millis();
+	std::uint32_t clock = pros::millis();
 
-  ////
+  ///////DRIVER CONTROL LOOP
 
-  while (true) { 
-    ///LEDSTUFF
-    pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
-						 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
-						 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
+  while (true) 
+	{ 
+    ///////LEDSTUFF
+    pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT)   >> 2,
+																							(pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
+																							(pros::lcd::read_buttons() & LCD_BTN_RIGHT)  >> 0);
 
     chassis.tank();
-/////FLYWHEEL
-  if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-      fw.move_voltage(11000); 
-    }
-  else
+
+		///////FLYWHEEL
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) 
+		{
+			fw.move_voltage(11000); 
+		}
+		else
 		{
 			fw.brake();
 		}
-///TRIPLESHOT
-  if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-    tripleShot();
+
+		///////TRIPLESHOT
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		{
+			tripleShot();
 			pros::delay(500);
-    }
-//////SINGLESHOT
-  if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-    singleShot();
+		}
+
+		///////SINGLESHOT
+  	if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) 
+		{
+			singleShot();
 			pros::delay(500);
-       }
-/////EXPANSION
-  if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) {
-    expansion.set_value(true); //expand
-    pros::delay(500);
-    expansion.set_value(false); //retract piston after shhoting
-       }
-///////INTAKE
-  if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-    intake.move_voltage(12000); }
-  else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) {
-    intake.move_velocity(-12000);
-  } else {
-    intake.brake();
-  }
-  ///////BLOOPER
-  if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) {              
-     blooperToggle = !blooperToggle;
-}
+		}
 
-if (blooperToggle) {
-   blooper.set_value(true);
-} else {
-   blooper.set_value(false);
-}
-}
+		///////EXPANSION
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B)) 
+		{
+			expansion.set_value(true); //expand
+			pros::delay(500);
+			expansion.set_value(false); //retract piston after shhoting
+		}
 
-    sylib::delay_until(&clock, 10);
+		///////INTAKE
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) 
+		{
+			intake.move_voltage(12000); 
+		}
+		else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y)) 
+		{
+			intake.move_velocity(-12000);
+		}
+		else 
+		{
+			intake.brake();
+		}
+		
+		///////BLOOPER
+		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)) 
+		{              
+			blooperToggle = !blooperToggle;
+		}
 
-    
-    pros::delay(ez::util::DELAY_TIME); // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
-  }
+		if (blooperToggle) 
+		{
+			blooper.set_value(true);
+		} 
+		else 
+		{
+			blooper.set_value(false);
+		}
+		pros::delay(ez::util::DELAY_TIME); // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
+	}
+}
