@@ -13,7 +13,7 @@ pros::Controller master (CONTROLLER_MASTER);
  * When this callback is fired, it will toggle line 2 of the LCD text between
  * "I was pressed!" and nothing.
  */
-void on_center_button() 
+void on_center_button()
 {
 	static bool pressed = false;
 	pressed = !pressed;
@@ -60,11 +60,11 @@ std::string out_stream;
 
 
 void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
-								 int i_FM_Integral_Limit, float f_FM_Coff_Frequency, 
+								 int i_FM_Integral_Limit, float f_FM_Coff_Frequency,
 								 float f_FM_derCoff_Frequency, float f_FM_Kf)
 {
 								Flywheel_Motor_Integral_Limit         = i_FM_Integral_Limit;
-								Target_Flywheel_Motor_RPM             = f_TFM_RPM/6;                
+								Target_Flywheel_Motor_RPM             = f_TFM_RPM/6;
 								Flywheel_Motor_Kp                     = f_FM_Kp;
 								Flywheel_Motor_Ki                     = f_FM_Ki;
 								Flywheel_Motor_Kd                     = f_FM_Kd; 
@@ -168,7 +168,7 @@ void write_file_from_queue(std::queue<std::string> q)
 				pros::lcd::print(0, "The printing has been cancelled.");
 				return;
 			}
-			while (!pros::usd::is_installed()) 
+			while (!pros::usd::is_installed())
 			{
 				now = pros::millis();
 				pros::Task::delay_until(&now,100);
@@ -184,7 +184,7 @@ void write_file_from_queue(std::queue<std::string> q)
 		pros::lcd::clear();
 	}
 	std::cout << "The Printing has commenced." << std::endl;
-	pros::lcd::clear();  
+	pros::lcd::clear();
 	pros::lcd::print(0, "The printing has commenced.");
 	std::ofstream file_handler("result_log.csv", std::ofstream::out); // creates a "result_log.csv" file
 	while (!q.empty()) // repeatedly checks if a queue is empty and writes the queue's contents to a sdcard file
@@ -211,7 +211,7 @@ int main_fcn()
 	master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X); // Allows for the ability for the flywheel code to be ended
   pros::delay(1000);
   // Target_Flywheel_Motor_RPM is between 0 and 3600
-	set_values(Target_Flywheel_Motor_RPM, Flywheel_Motor_Kp, Flywheel_Motor_Ki, Flywheel_Motor_Kd, Flywheel_Motor_Integral_Limit, 
+	set_values(Target_Flywheel_Motor_RPM, Flywheel_Motor_Kp, Flywheel_Motor_Ki, Flywheel_Motor_Kd, Flywheel_Motor_Integral_Limit,
   					 Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
   File_text << "Script counter,Delta time/seconds,Time elapsed/seconds,"
 							 "Flywheel motor RPM,Target Flywheel motor RPM,Flywheel motor filtered velocity,"
@@ -231,7 +231,7 @@ int main_fcn()
 		Task_Ended = true;
 		return 1;
 	}
-	else 
+	else
 	{
 		// t_Timer.placeHardMark();
 		// t_Timer.getDtFromHardMark().convert(okapi::millisecond);
@@ -243,20 +243,20 @@ int main_fcn()
 		record_previous_values();
 		Script_Counter = 1;
 		out_stream =  std::to_string(Script_Counter) + File_Seperator;
-		delta_time = compute_delta_time(); 					
+		delta_time = compute_delta_time();
 		File_text << out_stream << delta_time << File_Seperator << delta_time << File_Seperator
-							<< Flywheel_Motor.get_velocity() << File_Seperator 
+							<< Flywheel_Motor.get_velocity() << File_Seperator
 							<< Target_Flywheel_Motor_RPM << File_Seperator << return_and_filter_motor_velocity(Flywheel_Motor.get_velocity()) << File_Seperator
 							<< (Flywheel_Motor_Error*Flywheel_Motor_Kp) << File_Seperator << (Flywheel_Motor_Integral*Flywheel_Motor_Ki) << File_Seperator
 							<< (-Flywheel_Motor_Filtered_Derivative*Flywheel_Motor_Kd) << File_Seperator << Flywheel_Motor_Feedforwarded_Velocity << File_Seperator
-							<< Flywheel_MotorP6N_sentVoltage << File_Seperator << Flywheel_Motor_Integral_Limit << File_Seperator 
+							<< Flywheel_MotorP6N_sentVoltage << File_Seperator << Flywheel_Motor_Integral_Limit << File_Seperator
 							<< Flywheel_Motor.get_amps() << File_Seperator << Flywheel_Motor.get_watts()/Flywheel_Motor.get_amps() << File_Seperator
 							<< Flywheel_Motor.get_watts() << File_Seperator << Flywheel_Motor.get_torque() << File_Seperator
-							<< Flywheel_Motor.get_efficiency() << File_Seperator << Flywheel_Motor.get_temperature() << File_Seperator  
+							<< Flywheel_Motor.get_efficiency() << File_Seperator << Flywheel_Motor.get_temperature() << File_Seperator
 							<< Flywheel_Motor_Kp << File_Seperator << Flywheel_Motor_Ki << File_Seperator << Flywheel_Motor_Kd << Flywheel_Motor_Kf << File_Seperator
-							<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator; 					
+							<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator;
 		qLog.push(File_text.str());
-		delta_time = compute_delta_time();		
+		delta_time = compute_delta_time();
 	}
 
 	while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
@@ -269,15 +269,15 @@ int main_fcn()
 							<< Target_Flywheel_Motor_RPM << File_Seperator << return_and_filter_motor_velocity(Flywheel_Motor.get_velocity()) << File_Seperator
 							<< (Flywheel_Motor_Error*Flywheel_Motor_Kp) << File_Seperator << (Flywheel_Motor_Integral*Flywheel_Motor_Ki) << File_Seperator
 							<< (-Flywheel_Motor_Filtered_Derivative*Flywheel_Motor_Kd) << File_Seperator << Flywheel_Motor_Feedforwarded_Velocity << File_Seperator
-							<< Flywheel_MotorP6N_sentVoltage << File_Seperator << Flywheel_Motor_Integral_Limit << File_Seperator 
+							<< Flywheel_MotorP6N_sentVoltage << File_Seperator << Flywheel_Motor_Integral_Limit << File_Seperator
 							<< Flywheel_Motor.get_amps() << File_Seperator << Flywheel_Motor.get_watts()/Flywheel_Motor.get_amps() << File_Seperator
 							<< Flywheel_Motor.get_watts() << File_Seperator << Flywheel_Motor.get_torque() << File_Seperator
-							<< Flywheel_Motor.get_efficiency() << File_Seperator << Flywheel_Motor.get_temperature() << File_Seperator  
+							<< Flywheel_Motor.get_efficiency() << File_Seperator << Flywheel_Motor.get_temperature() << File_Seperator
 							<< Flywheel_Motor_Kp << File_Seperator << Flywheel_Motor_Ki << File_Seperator << Flywheel_Motor_Kd << Flywheel_Motor_Kf << File_Seperator
-							<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator; 					
-		qLog.push(File_text.str());  
-	}					
-	delta_time = compute_delta_time();			 
+							<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator;
+		qLog.push(File_text.str());
+	}
+	delta_time = compute_delta_time();
 	if (Button_Pressed)
 	{
 		Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeCoast);
