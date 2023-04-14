@@ -157,18 +157,18 @@ void autonomous() {
  void tripleShot()
 {
 	pros::ADIDigitalOut indexer('C');
-        indexer.set_value(true);
-		pros::delay(80);
-		indexer.set_value(false);
-		pros::delay(100);
-		indexer.set_value(true);
-		pros::delay(80);
-		indexer.set_value(false);
-		pros::delay(150);
-		indexer.set_value(true);
-		pros::delay(80);
-		indexer.set_value(false);
-		pros::delay(100);
+  indexer.set_value(true);
+  pros::delay(80);
+  indexer.set_value(false);
+  pros::delay(100);
+  indexer.set_value(true);
+  pros::delay(80);
+  indexer.set_value(false);
+  pros::delay(150);
+  indexer.set_value(true);
+  pros::delay(80);
+  indexer.set_value(false);
+  pros::delay(100);
 	
 }
 void singleShot()
