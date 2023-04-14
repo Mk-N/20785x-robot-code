@@ -20,7 +20,7 @@ void on_center_button()
 	if (pressed)
 	{
 		pros::lcd::set_text(2, "I was pressed!");
-  }
+	}
 	else
 	{
 		pros::lcd::clear_line(2);
@@ -76,7 +76,7 @@ void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
 
 inline void filter_motor_velocity (double d_Flywheel_Motor_Velocity)
 {
-  Flywheel_Motor_Filtered_Velocity = Flywheel_Motor_Cutoff_Frequency * d_Flywheel_Motor_Velocity 
+	Flywheel_Motor_Filtered_Velocity = Flywheel_Motor_Cutoff_Frequency * d_Flywheel_Motor_Velocity
 																		 + (1 - Flywheel_Motor_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Velocity;
 }
 
@@ -94,11 +94,11 @@ inline void set_motor_error()
 void process_speed()
 {
 	Flywheel_Motor_Integral = ((Flywheel_Motor_Error == 0) || (fabs(Flywheel_Motor_Error) > Flywheel_Motor_Integral_Limit) ||
-														((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0)) || 
+														((Target_Flywheel_Motor_RPM > 0) && (Previous_Flywheel_Motor_error > 0) && (Flywheel_Motor_Error < 0)) ||
 														((Target_Flywheel_Motor_RPM < 0) && (Previous_Flywheel_Motor_error < 0) && (Flywheel_Motor_Error > 0))) ? 0
-														: Flywheel_Motor_Integral + Flywheel_Motor_Error * delta_time; 
+														: Flywheel_Motor_Integral + Flywheel_Motor_Error * delta_time;
 	
-  Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Derivative_Cutoff_Frequency 
+	Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Derivative_Cutoff_Frequency 
 																			 * ((Flywheel_Motor_Filtered_Velocity - Previous_Flywheel_Motor_Filtered_Velocity)/delta_time)
 																			 + (1 - Flywheel_Motor_Derivative_Cutoff_Frequency) * Previous_Flywheel_Motor_Filtered_Derivative;
 }
@@ -110,7 +110,7 @@ void set_motor_volt()
 		Flywheel_MotorP6N_sentVoltage = (Flywheel_Motor_Feedforwarded_Velocity + Flywheel_Motor_Kp * Flywheel_Motor_Error + Flywheel_Motor_Ki * Flywheel_Motor_Integral - Flywheel_Motor_Kd * Flywheel_Motor_Filtered_Derivative);
 		Flywheel_Motor.set_voltage(Flywheel_MotorP6N_sentVoltage);
 	}
-	else if (Target_Flywheel_Motor_RPM == 0) 
+	else if (Target_Flywheel_Motor_RPM == 0)
 	{
 		Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeHold);
 		Flywheel_Motor.stop();
@@ -125,7 +125,7 @@ void set_motor_volt()
 			pros::delay(20);
 		}
 	}
-	else 
+	else
 	{
 		Flywheel_MotorP6N_sentVoltage = (Flywheel_Motor_Feedforwarded_Velocity + Flywheel_Motor_Kp * Flywheel_Motor_Error + Flywheel_Motor_Ki * Flywheel_Motor_Integral - Flywheel_Motor_Kd * Flywheel_Motor_Filtered_Derivative);
 		Flywheel_Motor.set_voltage(Flywheel_MotorP6N_sentVoltage);
@@ -191,7 +191,7 @@ void write_file_from_queue(std::queue<std::string> q)
 	{
 		file_handler << q.front() << std::endl;
 		q.pop();
-	} 
+	}
 	file_handler.close();
 	return;
 }
@@ -209,11 +209,11 @@ inline double compute_start_time()
 int main_fcn()
 {
 	master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X); // Allows for the ability for the flywheel code to be ended
-  pros::delay(1000);
-  // Target_Flywheel_Motor_RPM is between 0 and 3600
+	pros::delay(1000);
+	// Target_Flywheel_Motor_RPM is between 0 and 3600
 	set_values(Target_Flywheel_Motor_RPM, Flywheel_Motor_Kp, Flywheel_Motor_Ki, Flywheel_Motor_Kd, Flywheel_Motor_Integral_Limit,
-  					 Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
-  File_text << "Script counter,Delta time/seconds,Time elapsed/seconds,"
+						 Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
+	File_text << "Script counter,Delta time/seconds,Time elapsed/seconds,"
 							 "Flywheel motor RPM,Target Flywheel motor RPM,Flywheel motor filtered velocity,"
 							 "Flywheel motor proportional gain,Flywheel motor integral gain,Flywheel motor derivative gain,Flywheel motor feedforwarded gain,"
 							 "Flywheel motor commanded voltage/volts,Flywheel motor integral limit,"
@@ -260,12 +260,12 @@ int main_fcn()
 	}
 
 	while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
-  {
+	{
 		delta_time = compute_delta_time();
 		start_time = compute_start_time();
 		flywheel_pid();
 		File_text << ++Script_Counter << File_Seperator << compute_delta_time() << File_Seperator << compute_start_time() << File_Seperator
-   							<< Flywheel_Motor.get_velocity() << File_Seperator 
+							<< Flywheel_Motor.get_velocity() << File_Seperator
 							<< Target_Flywheel_Motor_RPM << File_Seperator << return_and_filter_motor_velocity(Flywheel_Motor.get_velocity()) << File_Seperator
 							<< (Flywheel_Motor_Error*Flywheel_Motor_Kp) << File_Seperator << (Flywheel_Motor_Integral*Flywheel_Motor_Ki) << File_Seperator
 							<< (-Flywheel_Motor_Filtered_Derivative*Flywheel_Motor_Kd) << File_Seperator << Flywheel_Motor_Feedforwarded_Velocity << File_Seperator
@@ -347,7 +347,7 @@ void autonomous() {}
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-void opcontrol() 
+void opcontrol()
 {
 	std::uint32_t now = pros::millis();
 	pros::Task flywheel_test (main_fcn, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "main_t");
