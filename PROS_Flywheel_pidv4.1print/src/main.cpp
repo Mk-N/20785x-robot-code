@@ -132,6 +132,21 @@ void set_motor_volt()
   }
 }
 
+inline void set_motor_volt_when_TFM_RPM_is_positive()
+{
+	// Future development for further optimisation (no branching required)
+}
+
+inline void set_motor_volt_when_TFM_RPM_is_negative()
+{
+	// Future development for further optimisation (no branching required)
+}
+
+inline void set_motor_volt_when_TFM_RPM_is_0()
+{
+	// Future development for further optimisation (no branching required)
+}
+
 inline void record_previous_values()
 {
 	Previous_Flywheel_Motor_Filtered_Derivative = Flywheel_Motor_Filtered_Derivative;
