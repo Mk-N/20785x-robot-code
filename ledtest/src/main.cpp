@@ -136,6 +136,7 @@ void opcontrol()
 
 	while (true)
 	{
+		clock = sylib::millis();
 		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
 						 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
 						 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
@@ -205,7 +206,7 @@ void opcontrol()
 		driveRightFrontTop = right;
 	}
 
-	sylib::delay_until(&clock, 10);
+	sylib::delay_until(&clock, 20);
 
 	pros::delay(20);
 }
