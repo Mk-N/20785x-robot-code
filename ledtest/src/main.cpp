@@ -34,6 +34,7 @@ void on_center_button()
 void initialize()
 {
 	pros::lcd::initialize();
+	pros::delay(500); // prevents user from doing anything whilst anolog ports initialise.
 	pros::lcd::set_text(1, "Hello PROS User!");
 	sylib::initialize();
 	pros::lcd::register_btn1_cb(on_center_button);
@@ -133,6 +134,82 @@ void opcontrol()
 	shotgun.set_value(false);
 
 	std::uint32_t clock = sylib::millis();
+	
+	// first loop is to ensure get digital new press works and so recalculation of clock is not required
+	pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
+						(pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
+						(pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
+	int left = master.get_analog(ANALOG_LEFT_Y) * -1;
+	int right = master.get_analog(ANALOG_RIGHT_Y);
+
+	if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2))
+	{
+		fw.move_voltage(11000);
+	}
+	else
+	{
+		fw.brake();
+	}
+
+	///////TRIPLESHOT
+	if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1))
+	{
+		tripleShot();
+		pros::delay(500);
+	}
+
+	///////SINGLESHOT
+	if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1))
+	{
+		singleShot();
+		pros::delay(100);
+	}
+
+	///////EXPANSION
+	if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B))
+	{
+		expansion.set_value(true); // expand
+		pros::delay(500);
+		expansion.set_value(false); // retract piston after shhoting
+	}
+
+	///////INTAKE
+	if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2))
+	{
+		intake.move_voltage(12000);
+	}
+	else if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y))
+	{
+		intake.move_velocity(-12000);
+	}
+	else
+	{
+		intake.brake();
+	}
+
+	///////BLOOPER
+	if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
+	{
+		blooperToggle = !blooperToggle;
+	}
+
+	if (blooperToggle)
+	{
+		blooper.set_value(true);
+	}
+	else
+	{
+		blooper.set_value(false);
+	}
+
+	driveLeftBack = left;
+	driveLeftFrontBottom = left;
+	driveLeftFrontTop = left;
+	driveRightBack = right;
+	driveRightFrontBottom = right;
+	driveRightFrontTop = right;
+
+	sylib::delay_until(&clock, 25); // delay matches controller refresh rate
 
 	while (true)
 	{
@@ -143,7 +220,7 @@ void opcontrol()
 		int left = master.get_analog(ANALOG_LEFT_Y) * -1;
 		int right = master.get_analog(ANALOG_RIGHT_Y);
 
-		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R2))
 		{
 			fw.move_voltage(11000);
 		}
@@ -151,31 +228,35 @@ void opcontrol()
 		{
 			fw.brake();
 		}
+
 		/// TRIPLESHOT
-		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1))
 		{
 			tripleShot();
 			pros::delay(500);
 		}
+
 		//////SINGLESHOT
-		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
+		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1))
 		{
 			singleShot();
 			pros::delay(100);
 		}
+
 		/////EXPANSION
-		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B))
 		{
 			expansion.set_value(true); // expand
 			pros::delay(500);
 			expansion.set_value(false); // retract piston after shhoting
 		}
+
 		///////INTAKE
-		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
+		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2))
 		{
 			intake.move_voltage(12000);
 		}
-		else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+		else if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y))
 		{
 			intake.move_velocity(-12000);
 		}
@@ -183,6 +264,7 @@ void opcontrol()
 		{
 			intake.brake();
 		}
+
 		///////BLOOPER
 		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
 		{
@@ -206,7 +288,5 @@ void opcontrol()
 		driveRightFrontTop = right;
 	}
 
-	sylib::delay_until(&clock, 20);
-
-	pros::delay(20);
+	sylib::delay_until(&clock, 25);
 }
