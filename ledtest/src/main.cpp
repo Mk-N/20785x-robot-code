@@ -1,5 +1,9 @@
 #include "main.h"
 
+pros::ADIDigitalOut expansion('A');
+pros::ADIDigitalOut blooper('B');
+bool blooperToggle = false;
+
 /**
  * A callback function for LLEMU's center button.
  *
@@ -79,20 +83,55 @@ void autonomous() {}
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+
+void tripleShot()
+{
+	pros::ADIDigitalOut indexer('C');
+	indexer.set_value(true);
+	pros::delay(80);
+	indexer.set_value(false);
+	pros::delay(100);
+	indexer.set_value(true);
+	pros::delay(80);
+	indexer.set_value(false);
+	pros::delay(150);
+	indexer.set_value(true);
+	pros::delay(80);
+	indexer.set_value(false);
+	pros::delay(100);
+}
+void singleShot()
+{
+	pros::ADIDigitalOut indexer('C');
+	indexer.set_value(true);
+	pros::delay(80);
+	indexer.set_value(false);
+	pros::delay(100);
+}
 void opcontrol()
 {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::Motor driveLeftBack(15);
 	pros::Motor driveLeftFrontBottom(14);
-	pros::Motor driveLeftFrontTop(5, true);
+	pros::Motor driveLeftFrontTop(4, true);
 	pros::Motor driveRightBack(20);
 	pros::Motor driveRightFrontBottom(19);
 	pros::Motor driveRightFrontTop(9, true);
+	pros::Motor intake(10, true);
+	pros::Motor fw(6, true);
+	pros::ADIDigitalOut shotgun('B');
 
-	auto addrled1 = sylib::Addrled(22, 7, 8);
-	auto addrled2 = sylib::Addrled(22, 8, 8);
-	addrled1.gradient(0xFF0000, 0xFF0005, 0, 0, false, true);
-	addrled2.gradient(0xFF0000, 0xFF0005, 0, 0, false, true);
+	auto addrled1 = sylib::Addrled(22, 7, -8);
+	auto addrled2 = sylib::Addrled(22, 8, -8);
+
+	addrled1.set_all(0xFF2E02);
+	addrled2.set_all(0xFF2E02);
+
+	addrled1.pulse(0x00AF47, 2, 8);
+	addrled2.pulse(0x00AF47, 2, 8);
+
+	shotgun.set_value(false);
+
 	std::uint32_t clock = sylib::millis();
 
 	while (true)
@@ -103,15 +142,70 @@ void opcontrol()
 		int left = master.get_analog(ANALOG_LEFT_Y) * -1;
 		int right = master.get_analog(ANALOG_RIGHT_Y);
 
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R2))
+		{
+			fw.move_voltage(11000);
+		}
+		else
+		{
+			fw.brake();
+		}
+		/// TRIPLESHOT
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_R1))
+		{
+			tripleShot();
+			pros::delay(500);
+		}
+		//////SINGLESHOT
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L1))
+		{
+			singleShot();
+			pros::delay(100);
+		}
+		/////EXPANSION
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_B))
+		{
+			expansion.set_value(true); // expand
+			pros::delay(500);
+			expansion.set_value(false); // retract piston after shhoting
+		}
+		///////INTAKE
+		if (master.get_digital(pros::E_CONTROLLER_DIGITAL_L2))
+		{
+			intake.move_voltage(12000);
+		}
+		else if (master.get_digital(pros::E_CONTROLLER_DIGITAL_Y))
+		{
+			intake.move_velocity(-12000);
+		}
+		else
+		{
+			intake.brake();
+		}
+		///////BLOOPER
+		if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP))
+		{
+			blooperToggle = !blooperToggle;
+		}
+
+		if (blooperToggle)
+		{
+			blooper.set_value(true);
+		}
+		else
+		{
+			blooper.set_value(false);
+		}
+
 		driveLeftBack = left;
 		driveLeftFrontBottom = left;
 		driveLeftFrontTop = left;
 		driveRightBack = right;
 		driveRightFrontBottom = right;
 		driveRightFrontTop = right;
-
-		sylib::delay_until(&clock, 10);
-
-		pros::delay(20);
 	}
+
+	sylib::delay_until(&clock, 10);
+
+	pros::delay(20);
 }
