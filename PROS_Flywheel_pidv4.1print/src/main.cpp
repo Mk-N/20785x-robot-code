@@ -1,6 +1,7 @@
 #include "main.h"
 
 #define Flywheel_Motor_Port 6
+#define File_Seperator ","
 
 sylib::Motor Flywheel_Motor (Flywheel_Motor_Port,3600, false);
 pros::Controller master (CONTROLLER_MASTER);
@@ -40,7 +41,6 @@ float Flywheel_Motor_Kf;
 // Don't touch these
 bool Button_Pressed                                = false;
 bool Task_Ended                                    = false;
-static char File_Seperator                         = ',';
 int Script_Counter                                 = 1;
 double Flywheel_Motor_Filtered_Velocity            = 0;
 double Flywheel_Motor_Error                        = 0;
@@ -275,21 +275,11 @@ inline void create_looped_file_text_string_stream()
 // This is the primary task
 int main_fcn()
 {
-	master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X); // Allows for the ability for the flywheel code to be ended
-	pros::delay(1000);
-	// Target_Flywheel_Motor_RPM is between 0 and 3600
-	set_values(Target_Flywheel_Motor_RPM, Flywheel_Motor_Kp, Flywheel_Motor_Ki, Flywheel_Motor_Kd, Flywheel_Motor_Integral_Limit,
-						 Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
-	File_text << "Script counter,Delta time/seconds,Time elapsed/seconds,"
-							 "Flywheel motor RPM,Target Flywheel motor RPM,Flywheel motor filtered velocity,"
-							 "Flywheel motor proportional gain,Flywheel motor integral gain,Flywheel motor derivative gain,Flywheel motor feedforwarded gain,"
-							 "Flywheel motor commanded voltage/volts,Flywheel motor integral limit,"
-							 "Flywheel motor current/amperes,Flywheel motor voltage/volts,Flywheel motor power/watts,Flywheel motor torque/newton meters,"
-							 "Flywheel motor efficiency/pct,Flywheel motor temperature/celsius,"
-							 "Flywheel motor Kp,Flywheel motor Ki,Flywheel motor Kd,Flywheel motor Kf,"
-							 "Flywheel motor cutoff frequency,Flywheel motor derivative cutoff frequency"; // writes the collumn titles of the csv file
-	qLog.push(File_text.str());
-	pros::delay(500);
+	if (1) [[likely]]
+	{
+		bool Start_Up_Get_Digital = master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X); // Allows for the ability for the flywheel code to be ended
+	} // Purpose of if is to lower the scope of Start_Up_Get_Digital
+	pros::delay(1500);
 	if (master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
 	{
 		std::cout << "The programme has been cancelled." << std::endl;
@@ -300,6 +290,18 @@ int main_fcn()
 	}
 	else
 	{
+		File_text << "Script counter,Delta time/seconds,Time elapsed/seconds,"
+								 "Flywheel motor RPM,Target Flywheel motor RPM,Flywheel motor filtered velocity,"
+								 "Flywheel motor proportional gain,Flywheel motor integral gain,Flywheel motor derivative gain,Flywheel motor feedforwarded gain,"
+								 "Flywheel motor commanded voltage/volts,Flywheel motor integral limit,"
+								 "Flywheel motor current/amperes,Flywheel motor voltage/volts,Flywheel motor power/watts,Flywheel motor torque/newton meters,"
+								 "Flywheel motor efficiency/pct,Flywheel motor temperature/celsius,"
+								 "Flywheel motor Kp,Flywheel motor Ki,Flywheel motor Kd,Flywheel motor Kf,"
+								 "Flywheel motor cutoff frequency,Flywheel motor derivative cutoff frequency"; // writes the collumn titles of the csv file
+		qLog.push(File_text.str());
+		// Target_Flywheel_Motor_RPM is between 0 and 3600
+		set_values(Target_Flywheel_Motor_RPM, Flywheel_Motor_Kp, Flywheel_Motor_Ki, Flywheel_Motor_Kd, Flywheel_Motor_Integral_Limit,
+							Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
 		// t_Timer.placeHardMark();
 		// t_Timer.getDtFromHardMark().convert(okapi::millisecond);
 		start_timer_time = pros::c::micros();
