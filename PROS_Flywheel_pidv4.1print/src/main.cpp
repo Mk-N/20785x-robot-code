@@ -39,7 +39,6 @@ float Flywheel_Motor_Kd;
 float Flywheel_Motor_Kf;
 
 // Don't touch these
-bool Button_Pressed                                = false;
 bool Task_Ended                                    = false;
 int Script_Counter                                 = 1;
 double Flywheel_Motor_Filtered_Velocity            = 0;
@@ -63,7 +62,7 @@ void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
 								 float f_FM_derCoff_Frequency, float f_FM_Kf)
 {
 								Flywheel_Motor_Integral_Limit         = i_FM_Integral_Limit;
-								Target_Flywheel_Motor_RPM             = f_TFM_RPM/6;
+								Target_Flywheel_Motor_RPM             = f_TFM_RPM;
 								Flywheel_Motor_Kp                     = f_FM_Kp;
 								Flywheel_Motor_Ki                     = f_FM_Ki;
 								Flywheel_Motor_Kd                     = f_FM_Kd;
@@ -73,9 +72,9 @@ void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
 								Flywheel_Motor_Derivative_Cutoff_Frequency = std::clamp(f_FM_derCoff_Frequency, static_cast<float>(0), static_cast<float>(1));
 }
 
-void set_only_TFM_RPM()
+void set_only_TFM_RPM(float f_TFM_RPM)
 {
-	//for future use
+	Target_Flywheel_Motor_RPM = f_TFM_RPM;
 }
 
 inline void filter_motor_velocity (double d_Flywheel_Motor_Velocity)
@@ -174,13 +173,31 @@ inline void record_previous_values()
 	Previous_Flywheel_Motor_error               = Flywheel_Motor_Error;
 }
 
-void flywheel_pid()
+void flywheel_pid_when_TFM_is_positive()
 {
 	filter_motor_velocity(Flywheel_Motor.get_velocity());
 	set_motor_error();
 	process_speed();
-	set_motor_volt();
+	set_motor_volt_when_TFM_RPM_is_positive();
 	record_previous_values();
+}
+
+void flywheel_pid_when_TFM_is_0()
+{
+	filter_motor_velocity(Flywheel_Motor.get_velocity());
+	set_motor_error();
+	process_speed();
+	set_motor_volt_when_TFM_RPM_is_0();
+	record_previous_values();	
+}
+
+void flywheel_pid_when_TFM_is_negative()
+{
+	filter_motor_velocity(Flywheel_Motor.get_velocity());
+	set_motor_error();
+	process_speed();
+	set_motor_volt_when_TFM_RPM_is_negative();
+	record_previous_values();	
 }
 
 void write_file_from_queue(std::queue<std::string> q)
@@ -304,62 +321,136 @@ int main_fcn()
 								 "Flywheel motor cutoff frequency,Flywheel motor derivative cutoff frequency"; // writes the collumn titles of the csv file
 		qLog.push(File_text.str());
 		// Target_Flywheel_Motor_RPM is between 0 and 3600
-		set_values(Target_Flywheel_Motor_RPM, Flywheel_Motor_Kp, Flywheel_Motor_Ki, Flywheel_Motor_Kd, Flywheel_Motor_Integral_Limit,
-							Flywheel_Motor_Cutoff_Frequency, Flywheel_Motor_Derivative_Cutoff_Frequency, Flywheel_Motor_Kf);
-		// t_Timer.placeHardMark();
-		// t_Timer.getDtFromHardMark().convert(okapi::millisecond);
-		start_timer_time = pros::c::micros();
-		start_time = pros::c::micros();
-		filter_motor_velocity(Flywheel_Motor.get_velocity());
-		set_motor_error();
-		set_motor_volt();
-		record_previous_values();
-		Script_Counter = 1;
-		out_stream =  std::to_string(Script_Counter) + File_Seperator;
-		delta_time = compute_delta_time();
-		File_text << out_stream << delta_time << File_Seperator << delta_time << File_Seperator
-							<< Flywheel_Motor.get_velocity() << File_Seperator
-							<< Target_Flywheel_Motor_RPM << File_Seperator << return_and_filter_motor_velocity(Flywheel_Motor.get_velocity()) << File_Seperator
-							<< (Flywheel_Motor_Error*Flywheel_Motor_Kp) << File_Seperator << (Flywheel_Motor_Integral*Flywheel_Motor_Ki) << File_Seperator
-							<< (-Flywheel_Motor_Filtered_Derivative*Flywheel_Motor_Kd) << File_Seperator << Flywheel_Motor_Feedforwarded_Velocity << File_Seperator
-							<< Flywheel_MotorP6N_sentVoltage << File_Seperator << Flywheel_Motor_Integral_Limit << File_Seperator
-							<< Flywheel_Motor.get_amps() << File_Seperator << Flywheel_Motor.get_watts()/Flywheel_Motor.get_amps() << File_Seperator
-							<< Flywheel_Motor.get_watts() << File_Seperator << Flywheel_Motor.get_torque() << File_Seperator
-							<< Flywheel_Motor.get_efficiency() << File_Seperator << Flywheel_Motor.get_temperature() << File_Seperator
-							<< Flywheel_Motor_Kp << File_Seperator << Flywheel_Motor_Ki << File_Seperator << Flywheel_Motor_Kd << Flywheel_Motor_Kf << File_Seperator
-							<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator;
-		qLog.push(File_text.str());
-		delta_time = compute_delta_time();
-	}
-
-	while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
-	{
-		delta_time = compute_delta_time();
-		start_time = compute_start_time();
-		flywheel_pid();
-		File_text << ++Script_Counter << File_Seperator << compute_delta_time() << File_Seperator << compute_start_time() << File_Seperator
-							<< Flywheel_Motor.get_velocity() << File_Seperator
-							<< Target_Flywheel_Motor_RPM << File_Seperator << return_and_filter_motor_velocity(Flywheel_Motor.get_velocity()) << File_Seperator
-							<< (Flywheel_Motor_Error*Flywheel_Motor_Kp) << File_Seperator << (Flywheel_Motor_Integral*Flywheel_Motor_Ki) << File_Seperator
-							<< (-Flywheel_Motor_Filtered_Derivative*Flywheel_Motor_Kd) << File_Seperator << Flywheel_Motor_Feedforwarded_Velocity << File_Seperator
-							<< Flywheel_MotorP6N_sentVoltage << File_Seperator << Flywheel_Motor_Integral_Limit << File_Seperator
-							<< Flywheel_Motor.get_amps() << File_Seperator << Flywheel_Motor.get_watts()/Flywheel_Motor.get_amps() << File_Seperator
-							<< Flywheel_Motor.get_watts() << File_Seperator << Flywheel_Motor.get_torque() << File_Seperator
-							<< Flywheel_Motor.get_efficiency() << File_Seperator << Flywheel_Motor.get_temperature() << File_Seperator
-							<< Flywheel_Motor_Kp << File_Seperator << Flywheel_Motor_Ki << File_Seperator << Flywheel_Motor_Kd << Flywheel_Motor_Kf << File_Seperator
-							<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator;
-		qLog.push(File_text.str());
+		set_values(2835, 10, 10, 0, 500000000,
+							1, 1, 1000); // some random values
+		if (Target_Flywheel_Motor_RPM < 0)
+		{
+			// t_Timer.placeHardMark();
+			// t_Timer.getDtFromHardMark().convert(okapi::millisecond);
+			start_timer_time = pros::c::micros();
+			start_time = pros::c::micros();
+			filter_motor_velocity(Flywheel_Motor.get_velocity());
+			set_motor_error();
+			set_motor_volt_when_TFM_RPM_is_positive();
+			record_previous_values();
+			Script_Counter = 1;
+			out_stream =  std::to_string(Script_Counter) + File_Seperator;
+			delta_time = compute_delta_time();
+			create_initial_file_text_string_stream();
+			qLog.push(File_text.str());
+			delta_time = compute_delta_time();
+			while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+			{
+				delta_time = compute_delta_time();
+				start_time = compute_start_time();
+				flywheel_pid_when_TFM_is_positive();
+				create_looped_file_text_string_stream();
+				qLog.push(File_text.str());
+			}
+		}
+		else if (Target_Flywheel_Motor_RPM == 0)
+		{
+			// t_Timer.placeHardMark();
+			// t_Timer.getDtFromHardMark().convert(okapi::millisecond);
+			start_timer_time = pros::c::micros();
+			start_time = pros::c::micros();
+			filter_motor_velocity(Flywheel_Motor.get_velocity());
+			set_motor_error();
+			set_motor_volt_when_TFM_RPM_is_0();
+			record_previous_values();
+			Script_Counter = 1;
+			out_stream =  std::to_string(Script_Counter) + File_Seperator;
+			delta_time = compute_delta_time();
+			create_initial_file_text_string_stream();			
+			qLog.push(File_text.str());
+			delta_time = compute_delta_time();
+			while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+			{
+				delta_time = compute_delta_time();
+				start_time = compute_start_time();
+				flywheel_pid_when_TFM_is_0();
+				create_looped_file_text_string_stream();
+				qLog.push(File_text.str());
+			}
+		}
+		else
+		{
+			// t_Timer.placeHardMark();
+			// t_Timer.getDtFromHardMark().convert(okapi::millisecond);
+			start_timer_time = pros::c::micros();
+			start_time = pros::c::micros();
+			filter_motor_velocity(Flywheel_Motor.get_velocity());
+			set_motor_error();
+			set_motor_volt_when_TFM_RPM_is_negative();
+			record_previous_values();
+			Script_Counter = 1;
+			out_stream =  std::to_string(Script_Counter) + File_Seperator;
+			delta_time = compute_delta_time();
+			create_initial_file_text_string_stream();
+			qLog.push(File_text.str());
+			delta_time = compute_delta_time();
+			while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+			{
+				delta_time = compute_delta_time();
+				start_time = compute_start_time();
+				flywheel_pid_when_TFM_is_negative();
+				create_looped_file_text_string_stream();
+				qLog.push(File_text.str());
+			}
+		}
 	}
 	delta_time = compute_delta_time();
-	if (Button_Pressed)
-	{
-		Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeCoast);
-		Flywheel_Motor.stop();
-		write_file_from_queue(qLog);
-	}
+	Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeCoast);
+	Flywheel_Motor.stop();
+	write_file_from_queue(qLog);
 	Task_Ended = true;
 	return 0;
 }
+
+int continuation_of_flywheel_pid()
+{
+	if (Target_Flywheel_Motor_RPM<0)
+	{
+		while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+		{
+			delta_time = compute_delta_time();
+			start_time = compute_start_time();
+			flywheel_pid_when_TFM_is_positive();
+			create_looped_file_text_string_stream();
+			qLog.push(File_text.str());
+		}
+	}
+	else if (Target_Flywheel_Motor_RPM == 0)
+	{
+		while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+		{
+			delta_time = compute_delta_time();
+			start_time = compute_start_time();
+			flywheel_pid_when_TFM_is_0();
+			create_looped_file_text_string_stream();
+			qLog.push(File_text.str());
+		}
+	}
+	else
+	{
+		while (!master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X))
+		{
+			delta_time = compute_delta_time();
+			start_time = compute_start_time();
+			flywheel_pid_when_TFM_is_negative();
+			create_looped_file_text_string_stream();
+			qLog.push(File_text.str());
+		}
+	}
+	delta_time = compute_delta_time();
+	Flywheel_Motor.set_braking_mode(kV5MotorBrakeModeCoast);
+	Flywheel_Motor.stop();
+	write_file_from_queue(qLog);
+	Task_Ended = true;
+	return 0;
+
+}
+
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -374,6 +465,7 @@ void initialize()
 	pros::lcd::set_text(1, "Hello PROS User!");
 	pros::lcd::register_btn1_cb(on_center_button);
 	sylib::initialize();
+	pros::delay(200); // Lets everything finish
 }
 
 /**
@@ -424,7 +516,16 @@ void opcontrol()
 {
 	std::uint32_t now = pros::millis();
 	pros::Task flywheel_test (main_fcn, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "main_t");
-	pros::Task::delay_until(&now,1000);
+	pros::Task::delay_until(&now,20000);
+	flywheel_test.suspend();
+	flywheel_test.remove();
+	set_values(2835, 10, 10, 0, 500000000,
+							1, 1, 1000); // some new values
+	// or do only this
+	set_only_TFM_RPM(2835);
+	// and then start the continuation task
+	pros::Task flywheel_continue (continuation_of_flywheel_pid(), TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "main_new");
+	// repeat this process for changing RPM agai
 	while (!Task_Ended)
 	{
 		now = pros::millis();
