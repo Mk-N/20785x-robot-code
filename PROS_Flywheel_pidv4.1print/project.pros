@@ -451,7 +451,8 @@
     },
     "upload_options": {
       "description": "Test flywheel PID code",
-      "icon": "X"
+      "icon": "X",
+      "slot": 4
     }
   }
 }
