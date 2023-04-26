@@ -58,7 +58,6 @@ std::queue <std::string> qLog;
 std::ostringstream File_text;
 std::string out_stream;
 
-
 void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
 								 int i_FM_Integral_Limit, float f_FM_Coff_Frequency,
 								 float f_FM_derCoff_Frequency, float f_FM_Kf)
@@ -72,6 +71,11 @@ void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
 
 								Flywheel_Motor_Cutoff_Frequency = std::clamp(f_FM_Coff_Frequency, static_cast<float>(0), static_cast<float>(1));
 								Flywheel_Motor_Derivative_Cutoff_Frequency = std::clamp(f_FM_derCoff_Frequency, static_cast<float>(0), static_cast<float>(1));
+}
+
+void set_only_TFM_RPM()
+{
+	//for future use
 }
 
 inline void filter_motor_velocity (double d_Flywheel_Motor_Velocity)
