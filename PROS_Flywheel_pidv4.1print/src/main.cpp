@@ -28,6 +28,12 @@ void on_center_button()
 	}
 }
 
+// Template to find the sign of a variable
+template <typename T> int sgn(T val)
+{
+	return (T(0) < val) - (val < T(0));
+}
+
 // Variables you change
 float Flywheel_Motor_Derivative_Cutoff_Frequency; // a value ONLY between 0 and 1, other values will get clamped
 float Flywheel_Motor_Cutoff_Frequency; // a value ONLY between 0 and 1, other values will get clamped
@@ -36,7 +42,8 @@ float Target_Flywheel_Motor_RPM;
 float Flywheel_Motor_Kp;
 float Flywheel_Motor_Ki;
 float Flywheel_Motor_Kd;
-float Flywheel_Motor_Kf;
+float Flywheel_Motor_Ks;
+float Flywheel_Motor_Kv;
 
 // Don't touch these
 bool Task_Ended                                    = false;
@@ -59,14 +66,15 @@ std::string out_stream;
 
 void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
 								 int i_FM_Integral_Limit, float f_FM_Coff_Frequency,
-								 float f_FM_derCoff_Frequency, float f_FM_Kf)
+								 float f_FM_derCoff_Frequency, float f_FM_Kv, float f_FM_Ks)
 {
 								Flywheel_Motor_Integral_Limit         = i_FM_Integral_Limit;
 								Target_Flywheel_Motor_RPM             = f_TFM_RPM;
 								Flywheel_Motor_Kp                     = f_FM_Kp;
 								Flywheel_Motor_Ki                     = f_FM_Ki;
 								Flywheel_Motor_Kd                     = f_FM_Kd;
-								Flywheel_Motor_Feedforwarded_Velocity = Target_Flywheel_Motor_RPM * f_FM_Kf;
+								Flywheel_Motor_Ks                     = sgn(Target_Flywheel_Motor_RPM) * f_FM_Ks;
+								Flywheel_Motor_Feedforwarded_Velocity = Target_Flywheel_Motor_RPM * f_FM_Kv + Flywheel_Motor_Ks;
 
 								Flywheel_Motor_Cutoff_Frequency = std::clamp(f_FM_Coff_Frequency, static_cast<float>(0), static_cast<float>(1));
 								Flywheel_Motor_Derivative_Cutoff_Frequency = std::clamp(f_FM_derCoff_Frequency, static_cast<float>(0), static_cast<float>(1));
@@ -269,7 +277,8 @@ inline void create_initial_file_text_string_stream()
 						<< Flywheel_Motor.get_amps() << File_Seperator << Flywheel_Motor.get_watts()/Flywheel_Motor.get_amps() << File_Seperator
 						<< Flywheel_Motor.get_watts() << File_Seperator << Flywheel_Motor.get_torque() << File_Seperator
 						<< Flywheel_Motor.get_efficiency() << File_Seperator << Flywheel_Motor.get_temperature() << File_Seperator
-						<< Flywheel_Motor_Kp << File_Seperator << Flywheel_Motor_Ki << File_Seperator << Flywheel_Motor_Kd << Flywheel_Motor_Kf << File_Seperator
+						<< Flywheel_Motor_Kp << File_Seperator << Flywheel_Motor_Ki << File_Seperator << Flywheel_Motor_Kd << File_Seperator
+						<< Flywheel_Motor_Ks << File_Seperator << Flywheel_Motor_Kv << File_Seperator
 						<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator;
 }
 
@@ -284,7 +293,8 @@ inline void create_looped_file_text_string_stream()
 						<< Flywheel_Motor.get_amps() << File_Seperator << Flywheel_Motor.get_watts()/Flywheel_Motor.get_amps() << File_Seperator
 						<< Flywheel_Motor.get_watts() << File_Seperator << Flywheel_Motor.get_torque() << File_Seperator
 						<< Flywheel_Motor.get_efficiency() << File_Seperator << Flywheel_Motor.get_temperature() << File_Seperator
-						<< Flywheel_Motor_Kp << File_Seperator << Flywheel_Motor_Ki << File_Seperator << Flywheel_Motor_Kd << Flywheel_Motor_Kf << File_Seperator
+						<< Flywheel_Motor_Kp << File_Seperator << Flywheel_Motor_Ki << File_Seperator << Flywheel_Motor_Kd << File_Seperator
+						<< Flywheel_Motor_Ks << File_Seperator << Flywheel_Motor_Kv << File_Seperator
 						<< Flywheel_Motor_Cutoff_Frequency << File_Seperator << Flywheel_Motor_Derivative_Cutoff_Frequency << File_Seperator;
 }
 
@@ -316,7 +326,7 @@ void main_fcn()
 		qLog.push(File_text.str());
 		// Target_Flywheel_Motor_RPM is between 0 and 3600
 		set_values(2835, 10, 10, 0, 500000000,
-							1, 1, 1000); // some random values
+							 1, 1, 10,10); // some random values
 		if (Target_Flywheel_Motor_RPM < 0)
 		{
 			// t_Timer.placeHardMark();
@@ -512,7 +522,7 @@ void opcontrol()
 	flywheel_test.suspend();
 	flywheel_test.remove();
 	set_values(2835, 10, 10, 0, 5000,
-							1, 1, 1000); // some new values
+						 1, 1, 10, 10); // some new values
 	// or do only this
 	set_only_TFM_RPM(2835);
 	// and then start the continuation task
