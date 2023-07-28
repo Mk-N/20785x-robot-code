@@ -74,7 +74,8 @@ void set_values (float f_TFM_RPM, float f_FM_Kp, float f_FM_Ki, float f_FM_Kd,
 								Flywheel_Motor_Ki                     = f_FM_Ki;
 								Flywheel_Motor_Kd                     = f_FM_Kd;
 								Flywheel_Motor_Ks                     = sgn(Target_Flywheel_Motor_RPM) * f_FM_Ks;
-								Flywheel_Motor_Feedforwarded_Velocity = Target_Flywheel_Motor_RPM * f_FM_Kv + Flywheel_Motor_Ks;
+								Flywheel_Motor_Kv                     = Target_Flywheel_Motor_RPM * f_FM_Kv;
+								Flywheel_Motor_Feedforwarded_Velocity = Flywheel_Motor_Kv + Flywheel_Motor_Ks;
 
 								Flywheel_Motor_Cutoff_Frequency = std::clamp(f_FM_Coff_Frequency, static_cast<float>(0), static_cast<float>(1));
 								Flywheel_Motor_Derivative_Cutoff_Frequency = std::clamp(f_FM_derCoff_Frequency, static_cast<float>(0), static_cast<float>(1));
