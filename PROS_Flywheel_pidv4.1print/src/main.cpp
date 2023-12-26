@@ -323,7 +323,7 @@ void main_fcn()
 								 "Flywheel motor current/amperes,Flywheel motor voltage/volts,Flywheel motor power/watts,Flywheel motor torque/newton meters,"
 								 "Flywheel motor efficiency/pct,Flywheel motor temperature/celsius,"
 								 "Flywheel motor Kp,Flywheel motor Ki,Flywheel motor Kd,Flywheel motor Ks, Flywheel motor Kv"
-								 "Flywheel motor cutoff frequency,Flywheel motor derivative cutoff frequency"; // writes the collumn titles of the csv file
+								 "Flywheel motor cutoff frequency,Flywheel motor derivative cutoff frequency"; // writes the column titles of the csv file
 		qLog.push(File_text.str());
 		// Target_Flywheel_Motor_RPM is between 0 and 3600
 		set_values(2835, 10, 10, 0, 500000000,
